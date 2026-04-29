@@ -157,6 +157,7 @@ impl Database {
                 action_type,
                 target_user_id,
                 moderator_user_id,
+                message_id,
                 reason,
                 duration_seconds,
                 details,
@@ -164,12 +165,13 @@ impl Database {
                 expires_at,
                 audit_log_channel_id,
                 audit_log_message_id
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, strftime('%s', 'now'), ?8, NULL, NULL)",
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, strftime('%s', 'now'), ?9, NULL, NULL)",
         )
         .bind(new_case.guild_id)
         .bind(new_case.action_type.as_str())
         .bind(new_case.target_user_id)
         .bind(new_case.moderator_user_id)
+        .bind(new_case.message_id)
         .bind(new_case.reason.clone())
         .bind(new_case.duration_seconds)
         .bind(new_case.details.clone())
@@ -205,7 +207,7 @@ impl Database {
     pub async fn case_by_id(&self, case_id: i64) -> AppResult<ModerationCaseRecord> {
         query_as::<_, ModerationCaseRecord>(
             "SELECT id, guild_id, action_type, target_user_id, moderator_user_id, reason,
-                duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
+                message_id, duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
              FROM moderation_cases
              WHERE id = ?1",
         )
@@ -226,7 +228,7 @@ impl Database {
     ) -> AppResult<ModerationCaseRecord> {
         query_as::<_, ModerationCaseRecord>(
             "SELECT id, guild_id, action_type, target_user_id, moderator_user_id, reason,
-                duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
+                message_id, duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
              FROM moderation_cases
              WHERE guild_id = ?1 AND id = ?2",
         )
@@ -249,7 +251,7 @@ impl Database {
     ) -> AppResult<Vec<ModerationCaseRecord>> {
         query_as::<_, ModerationCaseRecord>(
             "SELECT id, guild_id, action_type, target_user_id, moderator_user_id, reason,
-                duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
+                message_id, duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
              FROM moderation_cases
              WHERE guild_id = ?1 AND target_user_id = ?2
              ORDER BY created_at DESC

@@ -4,7 +4,7 @@ use serenity::all::{Mentionable, Message};
 use crate::{
     commands::{
         Context, Error, create_case_and_log, ensure_action_target, fetch_target_member,
-        guild_settings, normalized_reason, require_moderator, send_status,
+        guild_settings, normalized_message_id, normalized_reason, require_moderator, send_status,
     },
     domain::actions::{ModerationActionType, NewModerationCase},
     util::parse_duration,
@@ -14,6 +14,9 @@ use crate::{
 pub async fn warn(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for warning"]
     #[rest]
     reason: Option<String>,
@@ -21,6 +24,7 @@ pub async fn warn(
     let (guild_id, settings) = guild_settings(ctx).await?;
     let (_guild_id, _guild, _actor) =
         require_moderator(ctx, &settings, Permissions::MODERATE_MEMBERS).await?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
     ctx.defer_ephemeral().await?;
 
@@ -31,6 +35,7 @@ pub async fn warn(
             action_type: ModerationActionType::Warn,
             target_user_id: Some(user.id.get() as i64),
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: None,
             details: None,
@@ -57,6 +62,9 @@ pub async fn timeout(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
     #[description = "Duration like 30m, 4h, 7d"] duration: String,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for timeout"]
     #[rest]
     reason: Option<String>,
@@ -65,6 +73,7 @@ pub async fn timeout(
     let (_guild_id, guild, actor) =
         require_moderator(ctx, &settings, Permissions::MODERATE_MEMBERS).await?;
     let duration_seconds = parse_duration(&duration)?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
     ctx.defer_ephemeral().await?;
 
@@ -84,6 +93,7 @@ pub async fn timeout(
             action_type: ModerationActionType::Timeout,
             target_user_id: Some(user.id.get() as i64),
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: Some(duration_seconds),
             details: None,
@@ -109,6 +119,9 @@ pub async fn timeout(
 pub async fn kick(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for kick"]
     #[rest]
     reason: Option<String>,
@@ -116,6 +129,7 @@ pub async fn kick(
     let (guild_id, settings) = guild_settings(ctx).await?;
     let (_guild_id, guild, actor) =
         require_moderator(ctx, &settings, Permissions::KICK_MEMBERS).await?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
     ctx.defer_ephemeral().await?;
 
@@ -136,6 +150,7 @@ pub async fn kick(
             action_type: ModerationActionType::Kick,
             target_user_id: Some(user.id.get() as i64),
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: None,
             details: None,
@@ -161,6 +176,9 @@ pub async fn kick(
 pub async fn ban(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for ban"]
     #[rest]
     reason: Option<String>,
@@ -168,6 +186,7 @@ pub async fn ban(
     let (guild_id, settings) = guild_settings(ctx).await?;
     let (_guild_id, guild, actor) =
         require_moderator(ctx, &settings, Permissions::BAN_MEMBERS).await?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
     ctx.defer_ephemeral().await?;
 
@@ -189,6 +208,7 @@ pub async fn ban(
             action_type: ModerationActionType::Ban,
             target_user_id: Some(user.id.get() as i64),
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: None,
             details: None,
@@ -214,12 +234,16 @@ pub async fn ban(
 pub async fn unban(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for unban"]
     #[rest]
     reason: Option<String>,
 ) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::BAN_MEMBERS).await?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
 
     guild_id.unban(ctx.serenity_context(), user.id).await?;
@@ -231,6 +255,7 @@ pub async fn unban(
             action_type: ModerationActionType::Unban,
             target_user_id: Some(user.id.get() as i64),
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: None,
             details: None,
@@ -261,12 +286,16 @@ pub async fn purge(
     ctx: Context<'_>,
     #[description = "User to delete messages from"] user: Option<User>,
     #[description = "Number of recent messages to delete"] count: u8,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
     #[description = "Reason for purge"]
     #[rest]
     reason: Option<String>,
 ) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
+    let message_id = normalized_message_id(message_id)?;
     let reason = normalized_reason(&settings, reason)?;
 
     let channel_id = ctx.channel_id();
@@ -300,6 +329,7 @@ pub async fn purge(
             action_type: ModerationActionType::Purge,
             target_user_id: None,
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
             reason,
             duration_seconds: None,
             details: Some(details),

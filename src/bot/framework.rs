@@ -1,13 +1,15 @@
 use std::{collections::HashSet, sync::Arc};
 
 use anyhow::Context;
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, UserId};
+use poise::{
+    BoxFuture,
+    serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
+};
 
 use crate::{commands, state::AppState};
 
 pub async fn run(state: AppState) -> anyhow::Result<()> {
     let token = state.config().discord.token.clone();
-    let prefix = state.config().discord.prefix.clone();
     let owners: HashSet<UserId> = state
         .config()
         .discord
@@ -26,7 +28,8 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
                 Box::pin(crate::bot::events::handle(ctx, event, framework, data))
             },
             prefix_options: poise::PrefixFrameworkOptions {
-                prefix: Some(prefix),
+                prefix: None,
+                stripped_dynamic_prefix: Some(case_insensitive_prefix),
                 mention_as_prefix: true,
                 ..Default::default()
             },
@@ -55,6 +58,28 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
         .context("failed to create Discord client")?;
 
     client.start().await.context("Discord client exited")
+}
+
+fn case_insensitive_prefix<'a>(
+    _ctx: &'a poise::serenity_prelude::Context,
+    msg: &'a Message,
+    state: &'a AppState,
+) -> BoxFuture<'a, Result<Option<(&'a str, &'a str)>, anyhow::Error>> {
+    Box::pin(async move {
+        let prefix = state.config().discord.prefix.as_str();
+        let content = msg.content.as_str();
+
+        if content.len() < prefix.len() {
+            return Ok(None);
+        }
+
+        let (candidate, rest) = content.split_at(prefix.len());
+        if candidate.eq_ignore_ascii_case(prefix) {
+            Ok(Some((candidate, rest)))
+        } else {
+            Ok(None)
+        }
+    })
 }
 
 async fn register_application_commands(

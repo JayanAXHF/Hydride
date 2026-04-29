@@ -21,6 +21,7 @@ pub struct ModerationCaseRecord {
     pub action_type: String,
     pub target_user_id: Option<i64>,
     pub moderator_user_id: i64,
+    pub message_id: Option<i64>,
     pub reason: Option<String>,
     pub duration_seconds: Option<i64>,
     pub details: Option<String>,

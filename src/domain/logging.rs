@@ -35,6 +35,10 @@ pub fn case_embed(case: &ModerationCaseRecord) -> CreateEmbed {
             false,
         );
 
+    if let Some(message_id) = case.message_id {
+        embed = embed.field("Message ID", message_id.to_string(), true);
+    }
+
     if let Some(duration_seconds) = case.duration_seconds {
         embed = embed.field("Duration", format_duration(duration_seconds), true);
     }

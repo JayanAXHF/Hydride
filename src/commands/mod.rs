@@ -107,6 +107,16 @@ pub fn normalized_reason(
     }
 }
 
+pub fn normalized_message_id(message_id: Option<u64>) -> AppResult<Option<i64>> {
+    message_id
+        .map(|message_id| {
+            i64::try_from(message_id).map_err(|_| AppError::InvalidInput {
+                message: "message-id is too large".into(),
+            })
+        })
+        .transpose()
+}
+
 pub async fn create_case_and_log(
     ctx: Context<'_>,
     new_case: NewModerationCase,

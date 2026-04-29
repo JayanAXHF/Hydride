@@ -39,6 +39,10 @@ pub async fn case(
         ),
     ];
 
+    if let Some(message_id) = case.message_id {
+        lines.push(format!("Message ID: {}", message_id));
+    }
+
     if let Some(duration_seconds) = case.duration_seconds {
         lines.push(format!("Duration: {}", format_duration(duration_seconds)));
     }
@@ -123,6 +127,7 @@ pub async fn add_note(
             action_type: ModerationActionType::Note,
             target_user_id: None,
             moderator_user_id: ctx.author().id.get() as i64,
+            message_id: None,
             reason,
             duration_seconds: None,
             details: Some(format!("Attached note to case #{case_id}")),
