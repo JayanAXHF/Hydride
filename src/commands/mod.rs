@@ -7,11 +7,16 @@ use poise::{
     CreateReply,
     serenity_prelude::{GuildId, Member, PartialGuild, Permissions, UserId},
 };
+use serenity::all::CreateMessage;
 
 use crate::{
     config::RuntimeGuildSettings,
     db::models::ModerationCaseRecord,
-    domain::{actions::NewModerationCase, logging, permissions},
+    domain::{
+        actions::NewModerationCase,
+        logging::{self, case_embed},
+        permissions,
+    },
     error::{AppError, AppResult},
     state::AppState,
 };
@@ -144,6 +149,19 @@ pub async fn create_case_and_log(
             false
         }
     };
+
+    let message = CreateMessage::new().embed(case_embed(&case));
+    if let Some(user) = new_case.target_user_id {
+        let user = UserId::new(user as u64);
+        match user.create_dm_channel(ctx).await {
+            Ok(private_channel) => {
+                let _ = private_channel.send_message(ctx, message).await;
+            }
+            Err(e) => {
+                tracing::error!(case_id = case.id, user = ?new_case.target_user_id, %e, "Failed to DM user with moderation log")
+            }
+        }
+    }
 
     Ok((case, logged))
 }
