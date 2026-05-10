@@ -1,11 +1,21 @@
-use std::{env, path::PathBuf, sync::Arc};
+use std::{
+    env,
+    path::PathBuf,
+    sync::{Arc, OnceLock},
+    time::Instant,
+};
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use tracing_subscriber::{EnvFilter, fmt};
 
 use crate::{bot, config::BootstrapConfig, db::Database, state::AppState};
 
+pub static START_TIMESTAMP: OnceLock<Instant> = OnceLock::new();
+
 pub async fn run() -> anyhow::Result<()> {
+    START_TIMESTAMP
+        .set(Instant::now())
+        .map_err(|_| anyhow!("Unable to set start time. This should not be possible"))?;
     let config_path = env::var("MODBOT_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("config.toml"));

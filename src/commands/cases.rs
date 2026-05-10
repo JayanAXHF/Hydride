@@ -6,7 +6,11 @@ use crate::{
     domain::actions::{ModerationActionType, NewModerationCase},
     util::{format_duration, format_timestamp},
 };
-use poise::serenity_prelude::{Permissions, User};
+use poise::{
+    CreateReply,
+    serenity_prelude::{Permissions, User},
+};
+use serenity::all::{CreateEmbed, CreateMessage};
 
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn case(
@@ -15,6 +19,7 @@ pub async fn case(
 ) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
+    let mut embed = CreateEmbed::new();
 
     let case = ctx
         .data()
@@ -22,40 +27,44 @@ pub async fn case(
         .guild_case_by_id(guild_id.get() as i64, case_id)
         .await?;
 
-    let mut lines = vec![
-        format!("Case #{}", case.id),
-        format!("Action: {}", case.action_type),
-        format!("Moderator: <@{}>", case.moderator_user_id),
-        format!(
-            "Target: {}",
+    let mut fields = vec![
+        ("Case #", case.id.to_string(), true),
+        ("Action", case.action_type.to_string(), true),
+        ("Moderator", format!("<@{}>", case.moderator_user_id), true),
+        (
+            "Target",
             case.target_user_id
                 .map(|id| format!("<@{}>", id))
-                .unwrap_or_else(|| "N/A".into())
+                .unwrap_or_else(|| "N/A".into()),
+            true,
         ),
-        format!("Created: {}", format_timestamp(case.created_at)),
-        format!(
-            "Reason: {}",
-            case.reason.unwrap_or_else(|| "No reason provided".into())
+        (
+            "Reason",
+            case.reason.unwrap_or_else(|| "No reason provided".into()),
+            false,
         ),
     ];
 
     if let Some(message_id) = case.message_id {
-        lines.push(format!("Message ID: {}", message_id));
+        fields.push(("Message ID", message_id.to_string(), false));
     }
 
     if let Some(duration_seconds) = case.duration_seconds {
-        lines.push(format!("Duration: {}", format_duration(duration_seconds)));
+        fields.push(("Duration", format_duration(duration_seconds), true));
     }
 
     if let Some(expires_at) = case.expires_at {
-        lines.push(format!("Expires: {}", format_timestamp(expires_at)));
+        fields.push(("Expires", format_timestamp(expires_at), false));
     }
 
     if let Some(details) = case.details {
-        lines.push(format!("Details: {}", details));
+        fields.push(("Details", details, false));
     }
 
-    send_status(ctx, &settings, lines.join("\n")).await
+    embed = embed.fields(fields);
+    let reply = CreateReply::default().embed(embed);
+    ctx.send(reply).await?;
+    Ok(())
 }
 
 #[poise::command(prefix_command, slash_command, guild_only)]
