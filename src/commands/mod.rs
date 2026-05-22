@@ -37,6 +37,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         moderation::purge(),
         cases::case(),
         cases::cases(),
+        cases::remove_warn(),
         config::config(),
     ]
 }

@@ -113,6 +113,68 @@ pub async fn cases(
     send_status(ctx, &settings, summary).await
 }
 
+#[poise::command(prefix_command, slash_command, guild_only)]
+pub async fn remove_warn(
+    ctx: Context<'_>,
+    #[description = "Case number of the warning to remove"] case_id: i64,
+    #[description = "Reason for removing the warning"] reason: Option<String>,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
+
+    let case = ctx
+        .data()
+        .database()
+        .guild_case_by_id(guild_id.get() as i64, case_id)
+        .await?;
+
+    if case.action_type != ModerationActionType::Warn {
+        send_status(
+            ctx,
+            &settings,
+            format!("Case #{case_id} is not a warning (it is a `{}`). Only warn cases can be removed with this command.", case.action_type),
+        )
+        .await?;
+        return Ok(());
+    }
+
+    let target_user_id = case.target_user_id;
+
+    ctx.data()
+        .database()
+        .delete_case(guild_id.get() as i64, case_id)
+        .await?;
+
+    let normalized = normalized_reason(&settings, reason)?;
+
+    let (_case, _logged) = create_case_and_log(
+        ctx,
+        NewModerationCase {
+            guild_id: guild_id.get() as i64,
+            action_type: ModerationActionType::Note,
+            target_user_id,
+            moderator_user_id: ctx.author().id.get() as i64,
+            message_id: None,
+            reason: normalized,
+            duration_seconds: None,
+            details: Some(format!("Removed warning case #{case_id}")),
+            expires_at: None,
+        },
+    )
+    .await?;
+
+    let target_mention = target_user_id
+        .map(|id| format!(" for <@{id}>"))
+        .unwrap_or_default();
+
+    send_status(
+        ctx,
+        &settings,
+        format!("Warning case #{case_id}{target_mention} has been removed."),
+    )
+    .await
+}
+
 #[allow(dead_code)]
 pub async fn add_note(
     ctx: Context<'_>,
