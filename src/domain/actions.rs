@@ -1,4 +1,8 @@
-#[derive(Debug, Clone, Copy)]
+use std::str::FromStr;
+
+use crate::error::AppError;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModerationActionType {
     Warn,
     Timeout,
@@ -19,6 +23,22 @@ impl ModerationActionType {
             Self::Unban => "unban",
             Self::Purge => "purge",
             Self::Note => "note",
+        }
+    }
+}
+
+impl FromStr for ModerationActionType {
+    type Err = AppError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "warn" => Ok(Self::Warn),
+            "timeout" => Ok(Self::Timeout),
+            "kick" => Ok(Self::Kick),
+            "ban" => Ok(Self::Ban),
+            "unban" => Ok(Self::Unban),
+            "purge" => Ok(Self::Purge),
+            "note" => Ok(Self::Note),
+            _ => Err(AppError::GuildOnly), // this should not be possible, as this is only used when getting cases from the db
         }
     }
 }

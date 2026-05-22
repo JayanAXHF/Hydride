@@ -38,6 +38,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         cases::case(),
         cases::cases(),
         cases::remove_warn(),
+        cases::update_reason(),
         config::config(),
     ]
 }

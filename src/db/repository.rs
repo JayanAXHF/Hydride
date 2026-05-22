@@ -183,6 +183,16 @@ impl Database {
         self.case_by_id(result.last_insert_rowid()).await
     }
 
+    pub async fn update_case_reason(&self, case_id: i64, reason: &str) -> AppResult<()> {
+        query("UPDATE moderation_cases SET reason = ?1 WHERE id = ?2")
+            .bind(reason)
+            .bind(case_id)
+            .execute(&self.pool)
+            .await
+            .context(DatabaseSnafu)?;
+        Ok(())
+    }
+
     pub async fn update_case_audit_message(
         &self,
         case_id: i64,

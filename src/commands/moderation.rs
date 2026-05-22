@@ -1,15 +1,12 @@
 use poise::serenity_prelude::{GetMessages, Permissions, Timestamp, User};
-use serenity::all::{CreateMessage, Embed, Mentionable, Message};
+use serenity::all::{Mentionable, Message};
 
 use crate::{
     commands::{
         Context, Error, create_case_and_log, ensure_action_target, fetch_target_member,
         guild_settings, normalized_message_id, normalized_reason, require_moderator, send_status,
     },
-    domain::{
-        actions::{ModerationActionType, NewModerationCase},
-        logging::case_embed,
-    },
+    domain::actions::{ModerationActionType, NewModerationCase},
     util::parse_duration,
 };
 

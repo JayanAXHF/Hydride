@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::{
     commands::{
         Context, Error, create_case_and_log, guild_settings, normalized_reason, require_moderator,
@@ -10,7 +12,7 @@ use poise::{
     CreateReply,
     serenity_prelude::{Permissions, User},
 };
-use serenity::all::{CreateEmbed, CreateMessage};
+use serenity::all::CreateEmbed;
 
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn case(
@@ -128,7 +130,7 @@ pub async fn remove_warn(
         .guild_case_by_id(guild_id.get() as i64, case_id)
         .await?;
 
-    if case.action_type != ModerationActionType::Warn {
+    if ModerationActionType::from_str(&case.action_type)? != ModerationActionType::Warn {
         send_status(
             ctx,
             &settings,
@@ -139,13 +141,15 @@ pub async fn remove_warn(
     }
 
     let target_user_id = case.target_user_id;
+    let normalized = normalized_reason(&settings, reason)?;
+    let removal_note = normalized
+        .clone()
+        .unwrap_or_else(|| "Removed by moderator".into());
 
     ctx.data()
         .database()
-        .delete_case(guild_id.get() as i64, case_id)
+        .update_case_reason(case_id, &format!("[REMOVED] {removal_note}"))
         .await?;
-
-    let normalized = normalized_reason(&settings, reason)?;
 
     let (_case, _logged) = create_case_and_log(
         ctx,
@@ -171,6 +175,38 @@ pub async fn remove_warn(
         ctx,
         &settings,
         format!("Warning case #{case_id}{target_mention} has been removed."),
+    )
+    .await
+}
+
+#[poise::command(prefix_command, slash_command, guild_only)]
+pub async fn update_reason(
+    ctx: Context<'_>,
+    #[description = "Case number to update"] case_id: i64,
+    #[description = "New reason"] reason: String,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
+
+    // Verify the case exists and belongs to this guild before updating.
+    let _case = ctx
+        .data()
+        .database()
+        .guild_case_by_id(guild_id.get() as i64, case_id)
+        .await?;
+
+    let normalized = normalized_reason(&settings, Some(reason))?;
+    let reason_str = normalized.clone().unwrap_or_default();
+
+    ctx.data()
+        .database()
+        .update_case_reason(case_id, &reason_str)
+        .await?;
+
+    send_status(
+        ctx,
+        &settings,
+        format!("Case #{case_id} reason updated to: {reason_str}"),
     )
     .await
 }
