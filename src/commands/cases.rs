@@ -119,7 +119,9 @@ pub async fn cases(
 pub async fn remove_warn(
     ctx: Context<'_>,
     #[description = "Case number of the warning to remove"] case_id: i64,
-    #[description = "Reason for removing the warning"] reason: Option<String>,
+    #[description = "Reason for removing the warning"]
+    #[rest]
+    reason: Option<String>,
 ) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
@@ -183,7 +185,9 @@ pub async fn remove_warn(
 pub async fn update_reason(
     ctx: Context<'_>,
     #[description = "Case number to update"] case_id: i64,
-    #[description = "New reason"] reason: String,
+    #[rest]
+    #[description = "New reason"]
+    reason: String,
 ) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
