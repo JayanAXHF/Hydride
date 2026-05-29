@@ -4,10 +4,10 @@ use sqlx::{SqlitePool, query, query_as};
 use crate::{
     config::{RuntimeGuildSettings, RuntimeGuildSettingsDefaults},
     db::{
-        models::{CaseNoteRecord, GuildSettingsRecord, ModerationCaseRecord},
+        models::{CaseNoteRecord, GuildSettingsRecord, LeaveApplicationRecord, ModerationCaseRecord},
         pool,
     },
-    domain::actions::NewModerationCase,
+    domain::actions::{NewLeaveApplication, NewModerationCase},
     error::{AppResult, DatabaseMigrationSnafu, DatabaseSnafu, NotFoundSnafu},
 };
 
@@ -305,6 +305,93 @@ impl Database {
             entity: "case_note",
             id: result.last_insert_rowid().to_string(),
         })
+    }
+
+    pub async fn create_leave_application(
+        &self,
+        new_leave: &NewLeaveApplication,
+    ) -> AppResult<LeaveApplicationRecord> {
+        let result = query(
+            "INSERT INTO leave_applications (
+                guild_id,
+                applicant_user_id,
+                applicant_name,
+                duration_text,
+                reason,
+                created_by_user_id,
+                starts_at,
+                ends_at,
+                is_active,
+                created_at,
+                updated_at
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, strftime('%s', 'now'), strftime('%s', 'now'))",
+        )
+        .bind(new_leave.guild_id)
+        .bind(new_leave.applicant_user_id)
+        .bind(new_leave.applicant_name.clone())
+        .bind(new_leave.duration_text.clone())
+        .bind(new_leave.reason.clone())
+        .bind(new_leave.created_by_user_id)
+        .bind(new_leave.starts_at)
+        .bind(new_leave.ends_at)
+        .bind(new_leave.is_active)
+        .execute(&self.pool)
+        .await
+        .context(DatabaseSnafu)?;
+
+        query_as::<_, LeaveApplicationRecord>(
+            "SELECT id, guild_id, applicant_user_id, applicant_name, duration_text, reason,
+                created_by_user_id, starts_at, ends_at, is_active, created_at, updated_at
+             FROM leave_applications
+             WHERE id = ?1",
+        )
+        .bind(result.last_insert_rowid())
+        .fetch_optional(&self.pool)
+        .await
+        .context(DatabaseSnafu)?
+        .context(NotFoundSnafu {
+            entity: "leave_application",
+            id: result.last_insert_rowid().to_string(),
+        })
+    }
+
+    pub async fn list_active_leave_applications(
+        &self,
+        guild_id: i64,
+    ) -> AppResult<Vec<LeaveApplicationRecord>> {
+        query_as::<_, LeaveApplicationRecord>(
+            "SELECT id, guild_id, applicant_user_id, applicant_name, duration_text, reason,
+                created_by_user_id, starts_at, ends_at, is_active, created_at, updated_at
+             FROM leave_applications
+             WHERE guild_id = ?1
+               AND is_active = 1
+               AND (starts_at IS NULL OR starts_at <= strftime('%s', 'now'))
+               AND (ends_at IS NULL OR ends_at >= strftime('%s', 'now'))
+             ORDER BY created_at DESC",
+        )
+        .bind(guild_id)
+        .fetch_all(&self.pool)
+        .await
+        .context(DatabaseSnafu)
+    }
+
+    pub async fn list_leave_applications_for_user(
+        &self,
+        guild_id: i64,
+        applicant_user_id: i64,
+    ) -> AppResult<Vec<LeaveApplicationRecord>> {
+        query_as::<_, LeaveApplicationRecord>(
+            "SELECT id, guild_id, applicant_user_id, applicant_name, duration_text, reason,
+                created_by_user_id, starts_at, ends_at, is_active, created_at, updated_at
+             FROM leave_applications
+             WHERE guild_id = ?1 AND applicant_user_id = ?2
+             ORDER BY created_at DESC",
+        )
+        .bind(guild_id)
+        .bind(applicant_user_id)
+        .fetch_all(&self.pool)
+        .await
+        .context(DatabaseSnafu)
     }
 
     async fn mod_role_ids(&self, guild_id: i64) -> AppResult<Vec<u64>> {

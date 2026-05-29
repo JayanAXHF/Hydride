@@ -40,3 +40,20 @@ pub struct CaseNoteRecord {
     pub content: String,
     pub created_at: i64,
 }
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, FromRow)]
+pub struct LeaveApplicationRecord {
+    pub id: i64,
+    pub guild_id: i64,
+    pub applicant_user_id: i64,
+    pub applicant_name: String,
+    pub duration_text: String,
+    pub reason: String,
+    pub created_by_user_id: i64,
+    pub starts_at: Option<i64>,
+    pub ends_at: Option<i64>,
+    pub is_active: bool,
+    pub created_at: i64,
+    pub updated_at: i64,
+}

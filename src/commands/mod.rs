@@ -1,5 +1,6 @@
 pub mod cases;
 pub mod config;
+pub mod leave;
 pub mod meta;
 pub mod moderation;
 
@@ -35,6 +36,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         moderation::ban(),
         moderation::unban(),
         moderation::purge(),
+        leave::leave(),
         cases::case(),
         cases::cases(),
         cases::remove_warn(),

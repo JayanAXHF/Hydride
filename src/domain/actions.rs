@@ -55,3 +55,16 @@ pub struct NewModerationCase {
     pub details: Option<String>,
     pub expires_at: Option<i64>,
 }
+
+#[derive(Debug, Clone)]
+pub struct NewLeaveApplication {
+    pub guild_id: i64,
+    pub applicant_user_id: i64,
+    pub applicant_name: String,
+    pub duration_text: String,
+    pub reason: String,
+    pub created_by_user_id: i64,
+    pub starts_at: Option<i64>,
+    pub ends_at: Option<i64>,
+    pub is_active: bool,
+}
