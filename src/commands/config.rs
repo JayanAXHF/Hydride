@@ -10,6 +10,8 @@ use crate::commands::{Context, Error, guild_settings, require_config_manager, se
         "view",
         "set_log_channel",
         "clear_log_channel",
+        "set_leave_log_channel",
+        "clear_leave_log_channel",
         "set_require_reason",
         "set_ephemeral",
         "add_mod_role",
@@ -37,9 +39,13 @@ pub async fn view(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     let content = format!(
-        "Guild settings\nlog_channel: {}\nrequire_reason: {}\nephemeral_slash_responses: {}\nnotes_enabled: {}\nappeals_enabled: {}\nmod_roles: {}",
+        "Guild settings\nlog_channel: {}\nleave_log_channel: {}\nrequire_reason: {}\nephemeral_slash_responses: {}\nnotes_enabled: {}\nappeals_enabled: {}\nmod_roles: {}",
         settings
             .log_channel_id
+            .map(|channel_id| format!("<#{channel_id}>"))
+            .unwrap_or_else(|| "not configured".into()),
+        settings
+            .leave_log_channel_id
             .map(|channel_id| format!("<#{channel_id}>"))
             .unwrap_or_else(|| "not configured".into()),
         settings.require_reason,
@@ -86,6 +92,42 @@ pub async fn clear_log_channel(ctx: Context<'_>) -> Result<(), Error> {
 
     let settings = ctx.data().guild_settings(guild_id).await?;
     send_status(ctx, &settings, "Moderation log channel cleared.").await
+}
+
+#[poise::command(prefix_command, slash_command, guild_only)]
+pub async fn set_leave_log_channel(
+    ctx: Context<'_>,
+    #[description = "Channel to receive leave application logs"] channel: ChannelId,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    require_config_manager(ctx, &settings).await?;
+
+    ctx.data()
+        .database()
+        .set_leave_log_channel(guild_id.get() as i64, Some(channel.get() as i64))
+        .await?;
+
+    let settings = ctx.data().guild_settings(guild_id).await?;
+    send_status(
+        ctx,
+        &settings,
+        format!("Leave log channel set to <#{}>.", channel.get()),
+    )
+    .await
+}
+
+#[poise::command(prefix_command, slash_command, guild_only)]
+pub async fn clear_leave_log_channel(ctx: Context<'_>) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    require_config_manager(ctx, &settings).await?;
+
+    ctx.data()
+        .database()
+        .set_leave_log_channel(guild_id.get() as i64, None)
+        .await?;
+
+    let settings = ctx.data().guild_settings(guild_id).await?;
+    send_status(ctx, &settings, "Leave log channel cleared.").await
 }
 
 #[poise::command(prefix_command, slash_command, guild_only)]

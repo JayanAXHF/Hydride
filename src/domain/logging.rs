@@ -1,7 +1,7 @@
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, CreateMessage, Message};
 
 use crate::{
-    db::models::ModerationCaseRecord,
+    db::models::{LeaveApplicationRecord, ModerationCaseRecord},
     util::{format_duration, format_timestamp},
 };
 
@@ -50,6 +50,44 @@ pub fn case_embed(case: &ModerationCaseRecord) -> CreateEmbed {
     if let Some(details) = &case.details {
         embed = embed.field("Details", details, false);
     }
+
+    embed
+}
+
+pub async fn send_leave_application_log(
+    ctx: &Context,
+    channel_id: ChannelId,
+    leave: &LeaveApplicationRecord,
+) -> Result<Message, serenity::Error> {
+    channel_id
+        .send_message(&ctx.http, CreateMessage::new().embed(leave_application_embed(leave)))
+        .await
+}
+
+pub fn leave_application_embed(leave: &LeaveApplicationRecord) -> CreateEmbed {
+    let mut embed = CreateEmbed::new()
+        .title(format!("Leave Application #{}", leave.id))
+        .field("Applicant", format!("<@{}>", leave.applicant_user_id), true)
+        .field("Applicant Name", leave.applicant_name.clone(), true)
+        .field("Created By", format!("<@{}>", leave.created_by_user_id), true)
+        .field("Created", format_timestamp(leave.created_at), false)
+        .field("Reason", leave.reason.clone(), false);
+
+    if let (Some(start), Some(end)) = (leave.starts_at, leave.ends_at) {
+        embed = embed.field(
+            "Window",
+            format!("{} .. {}", format_timestamp(start), format_timestamp(end)),
+            true,
+        );
+    } else {
+        embed = embed.field("Duration", leave.duration_text.clone(), true);
+    }
+
+    embed = embed.field(
+        "Status",
+        if leave.is_active { "Active" } else { "Inactive" },
+        true,
+    );
 
     embed
 }

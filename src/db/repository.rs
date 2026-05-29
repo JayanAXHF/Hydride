@@ -38,17 +38,19 @@ impl Database {
             "INSERT INTO guild_settings (
                 guild_id,
                 log_channel_id,
+                leave_log_channel_id,
                 require_reason,
                 ephemeral_slash_responses,
                 notes_enabled,
                 appeals_enabled,
                 created_at,
                 updated_at
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, strftime('%s', 'now'), strftime('%s', 'now'))
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, strftime('%s', 'now'), strftime('%s', 'now'))
             ON CONFLICT(guild_id) DO NOTHING",
         )
         .bind(guild_id)
         .bind(defaults.log_channel_id.map(|value| value as i64))
+        .bind(defaults.leave_log_channel_id.map(|value| value as i64))
         .bind(defaults.require_reason)
         .bind(defaults.ephemeral_slash_responses)
         .bind(defaults.notes_enabled)
@@ -58,7 +60,7 @@ impl Database {
         .context(DatabaseSnafu)?;
 
         let record = query_as::<_, GuildSettingsRecord>(
-            "SELECT guild_id, log_channel_id, require_reason, ephemeral_slash_responses,
+            "SELECT guild_id, log_channel_id, leave_log_channel_id, require_reason, ephemeral_slash_responses,
                 notes_enabled, appeals_enabled, created_at, updated_at
              FROM guild_settings
              WHERE guild_id = ?1",
@@ -80,6 +82,25 @@ impl Database {
         query(
             "UPDATE guild_settings
              SET log_channel_id = ?2, updated_at = strftime('%s', 'now')
+             WHERE guild_id = ?1",
+        )
+        .bind(guild_id)
+        .bind(channel_id)
+        .execute(&self.pool)
+        .await
+        .context(DatabaseSnafu)?;
+
+        Ok(())
+    }
+
+    pub async fn set_leave_log_channel(
+        &self,
+        guild_id: i64,
+        channel_id: Option<i64>,
+    ) -> AppResult<()> {
+        query(
+            "UPDATE guild_settings
+             SET leave_log_channel_id = ?2, updated_at = strftime('%s', 'now')
              WHERE guild_id = ?1",
         )
         .bind(guild_id)

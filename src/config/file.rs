@@ -44,6 +44,8 @@ pub struct LoggingConfig {
 pub struct ModerationConfig {
     #[serde(default)]
     pub default_log_channel_id: Option<u64>,
+    #[serde(default)]
+    pub default_leave_log_channel_id: Option<u64>,
     #[serde(default = "default_require_reason")]
     pub require_reason: bool,
     #[serde(default = "default_ephemeral_slash_responses")]
@@ -107,6 +109,7 @@ impl Default for ModerationConfig {
     fn default() -> Self {
         Self {
             default_log_channel_id: None,
+            default_leave_log_channel_id: None,
             require_reason: default_require_reason(),
             ephemeral_slash_responses: default_ephemeral_slash_responses(),
             max_case_results: default_max_case_results(),

@@ -5,6 +5,7 @@ use sqlx::FromRow;
 pub struct GuildSettingsRecord {
     pub guild_id: i64,
     pub log_channel_id: Option<i64>,
+    pub leave_log_channel_id: Option<i64>,
     pub require_reason: bool,
     pub ephemeral_slash_responses: bool,
     pub notes_enabled: bool,

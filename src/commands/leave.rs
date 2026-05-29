@@ -2,6 +2,7 @@ use crate::{
     commands::{Context, Error, guild_settings, require_moderator, send_status},
     db::models::LeaveApplicationRecord,
     domain::actions::NewLeaveApplication,
+    domain::logging,
     error::AppError,
     util::{format_timestamp, parse_leave_window},
 };
@@ -58,14 +59,41 @@ pub async fn add(
         })
         .await?;
 
+    let logged = match settings.leave_log_channel_id {
+        Some(channel_id) => {
+            match logging::send_leave_application_log(
+                ctx.serenity_context(),
+                poise::serenity_prelude::ChannelId::new(channel_id),
+                &leave,
+            )
+            .await
+            {
+                Ok(_) => true,
+                Err(error) => {
+                    tracing::error!(leave_id = leave.id, %error, "failed to send leave application log");
+                    false
+                }
+            }
+        }
+        None => {
+            tracing::error!(leave_id = leave.id, "leave log channel is not configured");
+            false
+        }
+    };
+
     send_status(
         ctx,
         &settings,
         format!(
-            "Created leave application #{} for <@{}> ({applicant_name}) with window {}.",
+            "Created leave application #{} for <@{}> ({applicant_name}) with window {}.{}",
             leave.id,
             applicant.id.get(),
-            window_label
+            window_label,
+            if logged {
+                ""
+            } else {
+                " Leave log delivery failed."
+            }
         ),
     )
     .await

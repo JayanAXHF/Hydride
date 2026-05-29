@@ -36,6 +36,7 @@ impl AppState {
     pub fn guild_defaults(&self) -> RuntimeGuildSettingsDefaults {
         RuntimeGuildSettingsDefaults {
             log_channel_id: self.config.moderation.default_log_channel_id,
+            leave_log_channel_id: self.config.moderation.default_leave_log_channel_id,
             require_reason: self.config.moderation.require_reason,
             ephemeral_slash_responses: self.config.moderation.ephemeral_slash_responses,
             notes_enabled: false,
