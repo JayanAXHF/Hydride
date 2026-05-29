@@ -55,4 +55,16 @@ impl AppState {
 
         Ok(ChannelId::new(channel_id))
     }
+
+    pub async fn leave_log_channel(&self, guild_id: GuildId) -> AppResult<ChannelId> {
+        let settings = self.guild_settings(guild_id).await?;
+        let channel_id = settings
+            .leave_log_channel_id
+            .or(self.config.moderation.default_leave_log_channel_id)
+            .ok_or(AppError::MissingLogChannel {
+                guild_id: guild_id.get(),
+            })?;
+
+        Ok(ChannelId::new(channel_id))
+    }
 }

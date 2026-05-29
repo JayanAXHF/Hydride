@@ -59,24 +59,22 @@ pub async fn add(
         })
         .await?;
 
-    let logged = match settings.leave_log_channel_id {
-        Some(channel_id) => {
-            match logging::send_leave_application_log(
-                ctx.serenity_context(),
-                poise::serenity_prelude::ChannelId::new(channel_id),
-                &leave,
-            )
-            .await
-            {
-                Ok(_) => true,
-                Err(error) => {
-                    tracing::error!(leave_id = leave.id, %error, "failed to send leave application log");
-                    false
-                }
+    let logged = match ctx.data().leave_log_channel(guild_id).await {
+        Ok(channel_id) => match logging::send_leave_application_log(
+            ctx.serenity_context(),
+            channel_id,
+            &leave,
+        )
+        .await
+        {
+            Ok(_) => true,
+            Err(error) => {
+                tracing::error!(leave_id = leave.id, %error, "failed to send leave application log");
+                false
             }
-        }
-        None => {
-            tracing::error!(leave_id = leave.id, "leave log channel is not configured");
+        },
+        Err(error) => {
+            tracing::error!(leave_id = leave.id, %error, "leave log channel is not configured");
             false
         }
     };
