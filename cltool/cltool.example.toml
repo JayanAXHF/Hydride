@@ -1,0 +1,23 @@
+# Sample configuration for cltool.
+#
+# Point `git.repo_path` at the repository you want to scan.
+# Set `cliff.config_path` to the git-cliff template/config file.
+# Replace the Discord values with the real webhook URL and message id(s).
+
+[git]
+repo_path = "../"
+# Use a literal rev range for a bounded history window.
+# The tool will treat HEAD~N..HEAD as "latest N commits".
+range = "HEAD~10..HEAD"
+
+[cliff]
+config_path = "../cliff.toml"
+
+[discord]
+webhook_url = ""
+root_message_id = ""
+overflow_message_ids = []
+
+[output]
+max_content_chars = 1900
+heading = "# Changelog"
