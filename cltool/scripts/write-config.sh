@@ -13,7 +13,7 @@ cat > cltool/cltool.toml <<EOF
 # Replace the Discord values with the real webhook URL and message id(s).
 
 [git]
-repo_path = "../"
+repo_path = "./"
 # Use a literal rev range for a bounded history window.
 # The tool will treat HEAD~N..HEAD as "latest N commits".
 range = "HEAD~10..HEAD"

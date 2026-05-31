@@ -10,12 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      WEBHOOK_URL: ${{ secrets.CLTOOL_WEBHOOK_URL }}
-      MESSAGE_ID: ${{ secrets.CLTOOL_MESSAGE_ID }}
+      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      MESSAGE_ID: ${{ secrets.MESSAGE_ID }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
