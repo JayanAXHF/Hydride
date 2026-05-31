@@ -1,0 +1,27 @@
+name: cltool
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-cltool:
+    runs-on: ubuntu-latest
+
+    env:
+      WEBHOOK_URL: ${{ secrets.CLTOOL_WEBHOOK_URL }}
+      MESSAGE_ID: ${{ secrets.CLTOOL_MESSAGE_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Generate cltool config
+        run: ./cltool/scripts/write-config.sh
+
+      - name: Run cltool
+        run: cargo run -p cltool -- --config cltool/cltool.toml
