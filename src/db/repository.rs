@@ -4,7 +4,9 @@ use sqlx::{SqlitePool, query, query_as};
 use crate::{
     config::{RuntimeGuildSettings, RuntimeGuildSettingsDefaults},
     db::{
-        models::{CaseNoteRecord, GuildSettingsRecord, LeaveApplicationRecord, ModerationCaseRecord},
+        models::{
+            CaseNoteRecord, GuildSettingsRecord, LeaveApplicationRecord, ModerationCaseRecord,
+        },
         pool,
     },
     domain::actions::{NewLeaveApplication, NewModerationCase},
@@ -161,6 +163,54 @@ impl Database {
         query("DELETE FROM guild_mod_roles WHERE guild_id = ?1 AND role_id = ?2")
             .bind(guild_id)
             .bind(role_id)
+            .execute(&self.pool)
+            .await
+            .context(DatabaseSnafu)?;
+
+        Ok(())
+    }
+
+    pub async fn upsert_message_archive(
+        &self,
+        guild_id: i64,
+        channel_id: i64,
+        message_id: i64,
+        author_id: i64,
+        created_at: i64,
+        content_len: i64,
+    ) -> AppResult<()> {
+        query(
+            "INSERT INTO message_archive (
+                message_id,
+                guild_id,
+                channel_id,
+                author_id,
+                created_at,
+                content_len
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+            ON CONFLICT(message_id) DO UPDATE SET
+                guild_id = excluded.guild_id,
+                channel_id = excluded.channel_id,
+                author_id = excluded.author_id,
+                created_at = excluded.created_at,
+                content_len = excluded.content_len",
+        )
+        .bind(message_id)
+        .bind(guild_id)
+        .bind(channel_id)
+        .bind(author_id)
+        .bind(created_at)
+        .bind(content_len)
+        .execute(&self.pool)
+        .await
+        .context(DatabaseSnafu)?;
+
+        Ok(())
+    }
+
+    pub async fn delete_message_archive(&self, message_id: i64) -> AppResult<()> {
+        query("DELETE FROM message_archive WHERE message_id = ?1")
+            .bind(message_id)
             .execute(&self.pool)
             .await
             .context(DatabaseSnafu)?;

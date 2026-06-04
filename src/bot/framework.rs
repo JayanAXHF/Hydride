@@ -6,7 +6,7 @@ use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
 };
 
-use crate::{commands, state::AppState};
+use crate::{bot::activity, commands, state::AppState};
 
 pub async fn run(state: AppState) -> anyhow::Result<()> {
     let token = state.config().discord.token.clone();
@@ -40,6 +40,7 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
             let state = setup_state.clone();
             Box::pin(async move {
                 tracing::info!(bot = %ready.user.tag(), "registering commands");
+                run_startup_activity_reports(ctx, state.config()).await;
                 register_application_commands(ctx, framework, state.config()).await?;
                 Ok(state)
             })
@@ -101,4 +102,21 @@ async fn register_application_commands(
     }
 
     Ok(())
+}
+
+async fn run_startup_activity_reports(
+    ctx: &poise::serenity_prelude::Context,
+    config: &Arc<crate::config::BootstrapConfig>,
+) {
+    for guild_id in &config.discord.dev_guild_ids {
+        if let Err(error) =
+            activity::run_startup_role_activity_report(ctx, GuildId::new(*guild_id)).await
+        {
+            tracing::warn!(
+                guild_id = *guild_id,
+                %error,
+                "startup role activity report failed"
+            );
+        }
+    }
 }
