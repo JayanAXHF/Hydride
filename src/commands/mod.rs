@@ -3,6 +3,7 @@ pub mod config;
 pub mod leave;
 pub mod meta;
 pub mod moderation;
+pub mod stats;
 
 use poise::{
     CreateReply,
@@ -41,6 +42,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         cases::cases(),
         cases::remove_warn(),
         cases::update_reason(),
+        stats::stats(),
         config::config(),
     ]
 }

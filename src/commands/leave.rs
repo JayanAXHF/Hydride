@@ -25,7 +25,8 @@ pub async fn leave(_: Context<'_>) -> Result<(), Error> {
 pub async fn add(
     ctx: Context<'_>,
     #[description = "Applicant"] applicant: User,
-    #[description = "Leave window like 2026-05-29T10:00:00Z..2026-06-05T18:00:00Z or 7d"] window: String,
+    #[description = "Leave window like 2026-05-29T10:00:00Z..2026-06-05T18:00:00Z or 7d"]
+    window: String,
     #[description = "Reason for the leave notice"]
     #[rest]
     reason: String,
@@ -60,19 +61,17 @@ pub async fn add(
         .await?;
 
     let logged = match ctx.data().leave_log_channel(guild_id).await {
-        Ok(channel_id) => match logging::send_leave_application_log(
-            ctx.serenity_context(),
-            channel_id,
-            &leave,
-        )
-        .await
-        {
-            Ok(_) => true,
-            Err(error) => {
-                tracing::error!(leave_id = leave.id, %error, "failed to send leave application log");
-                false
+        Ok(channel_id) => {
+            match logging::send_leave_application_log(ctx.serenity_context(), channel_id, &leave)
+                .await
+            {
+                Ok(_) => true,
+                Err(error) => {
+                    tracing::error!(leave_id = leave.id, %error, "failed to send leave application log");
+                    false
+                }
             }
-        },
+        }
         Err(error) => {
             tracing::error!(leave_id = leave.id, %error, "leave log channel is not configured");
             false
@@ -113,13 +112,7 @@ pub async fn active(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    send_leave_application_list(
-        ctx,
-        &settings,
-        "Active leave applications",
-        &applications,
-    )
-    .await
+    send_leave_application_list(ctx, &settings, "Active leave applications", &applications).await
 }
 
 #[poise::command(prefix_command, slash_command, guild_only)]
@@ -168,10 +161,18 @@ fn normalize_required_text(field: &'static str, value: String) -> Result<String,
 }
 
 fn format_leave_application(leave: &LeaveApplicationRecord) -> String {
-    let status = if leave.is_active { "active" } else { "inactive" };
+    let status = if leave.is_active {
+        "active"
+    } else {
+        "inactive"
+    };
     let window = match (leave.starts_at, leave.ends_at) {
         (Some(start), Some(end)) => {
-            format!("window: {} .. {}", format_timestamp(start), format_timestamp(end))
+            format!(
+                "window: {} .. {}",
+                format_timestamp(start),
+                format_timestamp(end)
+            )
         }
         _ => format!("duration: {}", single_line(&leave.duration_text)),
     };
