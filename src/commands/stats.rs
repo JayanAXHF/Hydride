@@ -22,6 +22,14 @@ pub async fn stats(
 ) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
 
+    let reply = ctx
+        .send(
+            CreateReply::default()
+                .content("Loading stats...")
+                .ephemeral(true),
+        )
+        .await?;
+
     let guild_id = ctx.guild_id().ok_or(crate::error::AppError::GuildOnly)?;
     let window_days = days.unwrap_or(30).clamp(7, 30);
     let channel_id = channel.unwrap_or_else(|| ctx.channel_id());
@@ -43,8 +51,18 @@ pub async fn stats(
     .await?;
 
     let embed = logging::channel_stats_embed(&snap);
-    print_channel_stats(&mut stdout(), &snap)?;
-    ctx.send(CreateReply::default().embed(embed).ephemeral(true))
+    if let Err(error) = print_channel_stats(&mut stdout(), &snap) {
+        tracing::warn!(%error, "failed to print channel stats to terminal");
+    }
+
+    reply
+        .edit(
+            ctx,
+            CreateReply::default()
+                .content("")
+                .embed(embed)
+                .ephemeral(true),
+        )
         .await?;
     Ok(())
 }
