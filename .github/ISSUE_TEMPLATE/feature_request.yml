@@ -1,0 +1,46 @@
+```yaml
+name: Feature Request
+description: Suggest a new feature or improvement for the moderation bot.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: input
+    id: requester_name
+    attributes:
+      label: Requester Name
+      description: What is your Discord username or preferred name?
+      placeholder: e.g. ModMaster123
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature Description
+      description: Describe the feature you would like to see added.
+      placeholder: |
+        Explain what the feature should do, how it should behave,
+        and any commands, settings, or UI elements it may require.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this feature needed? What problem does it solve?
+      placeholder: |
+        Describe the issue, inconvenience, or moderation workflow
+        that this feature would improve.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I have searched existing feature requests and confirmed this has not already been suggested.
+          required: true
+```
