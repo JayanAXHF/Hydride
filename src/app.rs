@@ -34,7 +34,20 @@ pub async fn run() -> anyhow::Result<()> {
         .await
         .context("failed to run database migrations")?;
 
-    let state = AppState::new(config, database);
+    let highlights_database =
+        crate::db::HighlightsDatabase::connect(&config.database.highlights_url)
+            .await
+            .context("failed to initialize highlights database")?;
+    highlights_database
+        .migrate()
+        .await
+        .context("failed to run highlights database migrations")?;
+
+    let highlight_cache = crate::domain::highlights::build_initial_cache(&highlights_database)
+        .await
+        .context("failed to build initial highlight cache")?;
+
+    let state = AppState::new(config, database, highlights_database, highlight_cache);
     bot::framework::run(state).await
 }
 

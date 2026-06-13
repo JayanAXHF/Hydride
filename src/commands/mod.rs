@@ -1,5 +1,6 @@
 pub mod cases;
 pub mod config;
+pub mod highlights;
 pub mod leave;
 pub mod meta;
 pub mod moderation;
@@ -44,6 +45,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         cases::update_reason(),
         stats::stats(),
         config::config(),
+        highlights::highlight(),
     ]
 }
 

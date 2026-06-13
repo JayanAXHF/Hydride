@@ -19,6 +19,17 @@ pub async fn handle(
                     "failed to archive message"
                 );
             }
+
+            if let Err(error) =
+                crate::domain::highlights::process_message(_ctx, data, new_message).await
+            {
+                tracing::warn!(
+                    message_id = %new_message.id,
+                    channel_id = %new_message.channel_id,
+                    %error,
+                    "failed to process highlights for message"
+                );
+            }
         }
         poise::serenity_prelude::FullEvent::MessageUpdate {
             new: Some(new_message),

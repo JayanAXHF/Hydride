@@ -36,6 +36,8 @@ pub struct DiscordConfig {
 pub struct DatabaseConfig {
     #[serde(default = "default_database_url")]
     pub url: String,
+    #[serde(default = "default_highlights_database_url")]
+    pub highlights_url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -152,6 +154,10 @@ fn default_register_globally() -> bool {
 
 fn default_database_url() -> String {
     "sqlite://moderation_bot.db".into()
+}
+
+fn default_highlights_database_url() -> String {
+    "sqlite://highlights.db".into()
 }
 
 fn default_log_filter() -> String {

@@ -12,11 +12,23 @@ use crate::{
 pub struct AppState {
     config: Arc<BootstrapConfig>,
     database: Database,
+    highlights_database: crate::db::HighlightsDatabase,
+    highlight_cache: crate::domain::highlights::SharedHighlightCache,
 }
 
 impl AppState {
-    pub fn new(config: Arc<BootstrapConfig>, database: Database) -> Self {
-        Self { config, database }
+    pub fn new(
+        config: Arc<BootstrapConfig>,
+        database: Database,
+        highlights_database: crate::db::HighlightsDatabase,
+        highlight_cache: crate::domain::highlights::SharedHighlightCache,
+    ) -> Self {
+        Self {
+            config,
+            database,
+            highlights_database,
+            highlight_cache,
+        }
     }
 
     pub fn config(&self) -> &Arc<BootstrapConfig> {
@@ -25,6 +37,14 @@ impl AppState {
 
     pub fn database(&self) -> &Database {
         &self.database
+    }
+
+    pub fn highlights_database(&self) -> &crate::db::HighlightsDatabase {
+        &self.highlights_database
+    }
+
+    pub fn highlight_cache(&self) -> &crate::domain::highlights::SharedHighlightCache {
+        &self.highlight_cache
     }
 
     pub async fn guild_settings(&self, guild_id: GuildId) -> AppResult<RuntimeGuildSettings> {

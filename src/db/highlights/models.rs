@@ -1,0 +1,11 @@
+use sqlx::FromRow;
+
+#[derive(Debug, Clone, FromRow)]
+#[allow(dead_code)]
+pub struct HighlightRecord {
+    pub id: i64,
+    pub guild_id: i64,
+    pub user_id: i64,
+    pub pattern: String,
+    pub created_at: i64,
+}
