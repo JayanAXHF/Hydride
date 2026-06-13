@@ -19,7 +19,10 @@ pub async fn run() -> anyhow::Result<()> {
     let config_path = env::var("MODBOT_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("config.toml"));
-    let config = Arc::new(BootstrapConfig::load(&config_path)?);
+    let banlist_path = env::var("MODBOT_UUID_BANLIST")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("banlist.toml"));
+    let config = Arc::new(BootstrapConfig::load(&config_path, &banlist_path)?);
 
     init_tracing(&config.logging.filter)?;
 

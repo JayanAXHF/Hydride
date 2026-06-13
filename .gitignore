@@ -1,5 +1,6 @@
 /target
 config.toml
+banlist.toml
 /cltool/cltool.toml
 *.db
 *.db-shm
