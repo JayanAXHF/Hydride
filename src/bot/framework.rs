@@ -6,7 +6,11 @@ use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
 };
 
-use crate::{bot::activity, commands, state::AppState};
+use crate::{
+    bot::{activity, event_handler::Handler},
+    commands,
+    state::AppState,
+};
 
 pub async fn run(state: AppState) -> anyhow::Result<()> {
     let token = state.config().discord.token.clone();
@@ -57,7 +61,9 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION;
 
+    let handler = Handler::new(state.config().clone());
     let mut client = ClientBuilder::new(token, intents)
+        .event_handler(handler)
         .framework(framework)
         .await
         .context("failed to create Discord client")?;
