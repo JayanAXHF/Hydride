@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::HashSet, sync::Arc, time::Duration};
 
 use anyhow::Context;
 use poise::{
@@ -31,8 +31,12 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
                 prefix: None,
                 stripped_dynamic_prefix: Some(case_insensitive_prefix),
                 mention_as_prefix: true,
+                edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
+                    Duration::from_mins(5), // 5 minutes
+                ))),
                 ..Default::default()
             },
+
             owners,
             ..Default::default()
         })
