@@ -5,6 +5,7 @@ use poise::{
     BoxFuture,
     serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
 };
+use tracing::info;
 
 use crate::{
     bot::{activity, event_handler::Handler},
@@ -42,6 +43,30 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
             },
 
             owners,
+            // This code is run before every command
+            pre_command: |ctx| {
+                Box::pin(async move {
+                    let channel_name = &ctx
+                        .channel_id()
+                        .name(&ctx)
+                        .await
+                        .unwrap_or_else(|_| "<unknown>".to_owned());
+                    let author = &ctx.author().name;
+
+                    info!(
+                        "{} in {} used slash command '{}'",
+                        author,
+                        channel_name,
+                        &ctx.invoked_command_name()
+                    );
+                })
+            },
+            // This code is run after a command if it was successful (returned Ok)
+            post_command: |ctx| {
+                Box::pin(async move {
+                    info!("Executed command {}!", ctx.command().qualified_name);
+                })
+            },
             ..Default::default()
         })
         .setup(move |ctx, ready, framework| {
