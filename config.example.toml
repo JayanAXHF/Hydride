@@ -7,6 +7,7 @@ register_globally = false
 
 [database]
 url = "sqlite://moderation_bot.db"
+# highlights_url = "sqlite://highlights.db"
 
 [logging]
 filter = "info,serenity=warn,sqlx=warn"
