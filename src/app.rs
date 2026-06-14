@@ -2,19 +2,19 @@ use std::{
     env,
     path::PathBuf,
     sync::{Arc, OnceLock},
-    time::Instant,
 };
 
 use anyhow::{Context, anyhow};
+use time::UtcDateTime;
 use tracing_subscriber::{EnvFilter, fmt};
 
 use crate::{bot, config::BootstrapConfig, db::Database, state::AppState};
 
-pub static START_TIMESTAMP: OnceLock<Instant> = OnceLock::new();
+pub static START_TIMESTAMP: OnceLock<UtcDateTime> = OnceLock::new();
 
 pub async fn run() -> anyhow::Result<()> {
     START_TIMESTAMP
-        .set(Instant::now())
+        .set(UtcDateTime::now())
         .map_err(|_| anyhow!("Unable to set start time. This should not be possible"))?;
     let config_path = env::var("MODBOT_CONFIG")
         .map(PathBuf::from)

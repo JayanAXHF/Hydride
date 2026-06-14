@@ -7,8 +7,7 @@ use futures::{self, StreamExt, stream};
 use poise::CreateReply;
 use serenity::all::{CreateEmbed, CreateEmbedFooter, User, UserId};
 use std::fmt::Write;
-use std::time::Instant;
-use time::{ext::InstantExt, format_description::well_known::Rfc2822};
+use time::{UtcDateTime, ext::InstantExt, format_description::well_known::Rfc2822};
 
 #[poise::command(prefix_command, slash_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
@@ -33,8 +32,17 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
     let Some(time) = START_TIMESTAMP.get() else {
         bail!("Unable to get start timestamp");
     };
-    let passed = Instant::now().signed_duration_since(*time);
+    let passed = UtcDateTime::now() - *time;
     ctx.say(format!("Uptime: {}", passed)).await?;
+    Ok(())
+}
+#[poise::command(prefix_command, slash_command)]
+pub async fn last_updated(ctx: Context<'_>) -> Result<(), Error> {
+    let Some(time) = START_TIMESTAMP.get() else {
+        bail!("Unable to get last update timestamp");
+    };
+    let formatted = time.format(&Rfc2822)?;
+    ctx.say(format!("Last Updated at {formatted}")).await?;
     Ok(())
 }
 
