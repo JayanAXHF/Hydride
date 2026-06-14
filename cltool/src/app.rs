@@ -1,3 +1,5 @@
+use jiff::Timestamp;
+
 use crate::Cli;
 use crate::changelog::generate as generate_changelog;
 use crate::config::AppConfig;
@@ -14,7 +16,15 @@ pub async fn run(cli: Cli) -> Result<(), AppError> {
         resolved.range.as_deref(),
     )?;
     let rendered = with_heading(&changelog, resolved.output.heading.as_deref());
-    let chunks = chunk_for_discord(&rendered, resolved.output.max_content_chars);
+    let mut chunks = chunk_for_discord(&rendered, resolved.output.max_content_chars);
+    let now = Timestamp::now();
+    let timestamp = format!(
+        "Last updated at {}",
+        now.strftime("%A, %B %d, %Y at %-I:%M %P")
+    );
+    if let Some(first) = chunks.first_mut() {
+        *first = format!("{timestamp}\n{first}");
+    }
 
     if cli.stdout {
         print!("{rendered}");
