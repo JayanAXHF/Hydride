@@ -1806,6 +1806,7 @@ name = "moderation_bot"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "owo-colors",
  "poise",
  "regex",
