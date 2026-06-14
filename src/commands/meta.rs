@@ -7,7 +7,7 @@ use futures::{self, StreamExt, stream};
 use poise::CreateReply;
 use serenity::all::{CreateEmbed, CreateEmbedFooter, User, UserId};
 use std::fmt::Write;
-use time::{UtcDateTime, ext::InstantExt, format_description::well_known::Rfc2822};
+use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
 #[poise::command(prefix_command, slash_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
@@ -46,7 +46,11 @@ pub async fn last_updated(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    required_permissions = "MODERATE_MEMBERS"
+)]
 pub async fn pinglist(ctx: Context<'_>) -> Result<(), Error> {
     let pinglist_ids = ctx.data().config().join_pinglist.members.clone();
     let users = u64_to_user(ctx, pinglist_ids);
@@ -66,7 +70,11 @@ pub async fn pinglist(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(CreateReply::default().embed(embed)).await?;
     Ok(())
 }
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    required_permissions = "MODERATE_MEMBERS"
+)]
 pub async fn banlist(ctx: Context<'_>) -> Result<(), Error> {
     let banlist = ctx.data().config().banlist.ids.clone();
     let users = u64_to_user(ctx, banlist);

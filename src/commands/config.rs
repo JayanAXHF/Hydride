@@ -16,7 +16,8 @@ use crate::commands::{Context, Error, guild_settings, require_config_manager, se
         "set_ephemeral",
         "add_mod_role",
         "remove_mod_role"
-    )
+    ),
+    required_permissions = "MODERATE_MEMBERS"
 )]
 pub async fn config(_: Context<'_>) -> Result<(), Error> {
     Ok(())
