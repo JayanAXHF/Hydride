@@ -14,6 +14,7 @@ use poise::{
 };
 use serenity::all::CreateEmbed;
 
+/// View details of a specific moderation case by its ID.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn case(
     ctx: Context<'_>,
@@ -69,6 +70,7 @@ pub async fn case(
     Ok(())
 }
 
+/// List recent moderation cases for a specific user.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn cases(
     ctx: Context<'_>,
@@ -115,6 +117,7 @@ pub async fn cases(
     send_status(ctx, &settings, summary).await
 }
 
+/// Remove a warning case by ID and log an explanatory note.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn remove_warn(
     ctx: Context<'_>,
@@ -181,6 +184,7 @@ pub async fn remove_warn(
     .await
 }
 
+/// Update the reason for an existing moderation case.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn update_reason(
     ctx: Context<'_>,
@@ -215,6 +219,7 @@ pub async fn update_reason(
     .await
 }
 
+/// Attach a note to an existing moderation case.
 #[allow(dead_code)]
 pub async fn add_note(
     ctx: Context<'_>,

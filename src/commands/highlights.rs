@@ -3,6 +3,7 @@ use poise::CreateReply;
 use regex::RegexBuilder;
 use serenity::all::CreateEmbed;
 
+/// Manage word or phrase highlights.
 #[poise::command(
     prefix_command,
     slash_command,
@@ -14,6 +15,7 @@ pub async fn highlight(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Add a new highlight pattern (regex format) to watch for.
 #[poise::command(prefix_command, slash_command, guild_only, rename = "add")]
 pub async fn add(
     ctx: Context<'_>,
@@ -87,6 +89,7 @@ pub async fn add(
     Ok(())
 }
 
+/// Remove a registered highlight pattern by its ID.
 #[poise::command(prefix_command, slash_command, guild_only, rename = "remove")]
 pub async fn remove(
     ctx: Context<'_>,
@@ -120,6 +123,7 @@ pub async fn remove(
     Ok(())
 }
 
+/// List all your registered highlight patterns in this server.
 #[poise::command(prefix_command, slash_command, guild_only, rename = "list")]
 pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = guild_id(ctx).await?;
@@ -152,6 +156,7 @@ pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Test sample text against your registered highlight patterns to verify matches.
 #[poise::command(prefix_command, slash_command, guild_only, rename = "test")]
 pub async fn test(
     ctx: Context<'_>,

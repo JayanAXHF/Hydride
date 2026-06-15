@@ -10,6 +10,7 @@ use crate::{
     util::parse_duration,
 };
 
+/// Issue a formal warning to a user.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn warn(
     ctx: Context<'_>,
@@ -57,6 +58,7 @@ pub async fn warn(
     .await
 }
 
+/// Mute or timeout a user for a specified duration.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn timeout(
     ctx: Context<'_>,
@@ -115,6 +117,7 @@ pub async fn timeout(
     .await
 }
 
+/// Kick a user from the server.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn kick(
     ctx: Context<'_>,
@@ -172,6 +175,7 @@ pub async fn kick(
     .await
 }
 
+/// Ban a user from the server.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn ban(
     ctx: Context<'_>,
@@ -230,6 +234,7 @@ pub async fn ban(
     .await
 }
 
+/// Unban a previously banned user.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn unban(
     ctx: Context<'_>,
@@ -277,6 +282,7 @@ pub async fn unban(
     .await
 }
 
+/// Bulk delete a specified number of messages in the current channel.
 #[poise::command(
     prefix_command,
     slash_command,

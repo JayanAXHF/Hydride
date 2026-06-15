@@ -12,7 +12,7 @@ use crate::{
     terminal::print_channel_stats,
 };
 
-/// /stats channel [channel] [days]
+/// Fetch and display message activity statistics for a channel.
 #[poise::command(prefix_command, slash_command, guild_only)]
 pub async fn stats(
     ctx: Context<'_>,
