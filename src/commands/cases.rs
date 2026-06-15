@@ -14,8 +14,8 @@ use poise::{
 };
 use serenity::all::CreateEmbed;
 
-/// View details of a specific moderation case by its ID.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// View details of a case by ID.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Cases")]
 pub async fn case(
     ctx: Context<'_>,
     #[description = "Case number"] case_id: i64,
@@ -70,8 +70,8 @@ pub async fn case(
     Ok(())
 }
 
-/// List recent moderation cases for a specific user.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// List moderation cases for a user.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Cases")]
 pub async fn cases(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -117,8 +117,8 @@ pub async fn cases(
     send_status(ctx, &settings, summary).await
 }
 
-/// Remove a warning case by ID and log an explanatory note.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Remove a warning case by ID.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Cases")]
 pub async fn remove_warn(
     ctx: Context<'_>,
     #[description = "Case number of the warning to remove"] case_id: i64,
@@ -184,8 +184,8 @@ pub async fn remove_warn(
     .await
 }
 
-/// Update the reason for an existing moderation case.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Update the reason for an existing case.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Cases")]
 pub async fn update_reason(
     ctx: Context<'_>,
     #[description = "Case number to update"] case_id: i64,
@@ -219,7 +219,7 @@ pub async fn update_reason(
     .await
 }
 
-/// Attach a note to an existing moderation case.
+/// Attach a note to an case.
 #[allow(dead_code)]
 pub async fn add_note(
     ctx: Context<'_>,

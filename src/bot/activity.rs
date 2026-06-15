@@ -33,6 +33,7 @@ pub struct RoleActivityChannelReport {
     pub pages_scanned: u64,
 }
 
+#[allow(dead_code)]
 pub async fn run_startup_role_activity_report(
     ctx: &serenity::client::Context,
     guild_id: GuildId,

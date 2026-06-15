@@ -10,8 +10,8 @@ use crate::{
     util::parse_duration,
 };
 
-/// Issue a formal warning to a user.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Issue a formal warning.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
 pub async fn warn(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -58,8 +58,8 @@ pub async fn warn(
     .await
 }
 
-/// Mute or timeout a user for a specified duration.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Mute or timeout a user.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
 pub async fn timeout(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -118,7 +118,7 @@ pub async fn timeout(
 }
 
 /// Kick a user from the server.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
 pub async fn kick(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -176,7 +176,7 @@ pub async fn kick(
 }
 
 /// Ban a user from the server.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
 pub async fn ban(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -235,7 +235,7 @@ pub async fn ban(
 }
 
 /// Unban a previously banned user.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
 pub async fn unban(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -282,7 +282,7 @@ pub async fn unban(
     .await
 }
 
-/// Bulk delete a specified number of messages in the current channel.
+/// Bulk delete messages in the current channel.
 #[poise::command(
     prefix_command,
     slash_command,

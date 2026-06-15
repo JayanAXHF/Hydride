@@ -12,8 +12,14 @@ use crate::{
     terminal::print_channel_stats,
 };
 
-/// Fetch and display message activity statistics for a channel.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Fetch statistics for a channel.
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    category = "Statistics",
+    broadcast_typing
+)]
 pub async fn stats(
     ctx: Context<'_>,
     #[description = "Channel to analyse"] channel: Option<ChannelId>,

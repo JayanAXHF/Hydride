@@ -2,7 +2,7 @@ use poise::serenity_prelude::{ChannelId, Permissions, RoleId};
 
 use crate::commands::{Context, Error, guild_settings, require_config_manager, send_status};
 
-/// Manage bot configuration settings for this server.
+/// Manage server configuration settings.
 #[poise::command(
     prefix_command,
     slash_command,
@@ -25,8 +25,8 @@ pub async fn config(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// View the current bot configuration settings for this server.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// View the current bot config.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn view(ctx: Context<'_>) -> Result<(), Error> {
     let (_guild_id, settings) = guild_settings(ctx).await?;
     require_config_manager(ctx, &settings).await?;
@@ -62,8 +62,8 @@ pub async fn view(ctx: Context<'_>) -> Result<(), Error> {
     send_status(ctx, &settings, content).await
 }
 
-/// Set the channel where moderation logs will be sent.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Set moderation logs channel.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn set_log_channel(
     ctx: Context<'_>,
     #[description = "Channel to receive moderation logs"] channel: ChannelId,
@@ -85,8 +85,8 @@ pub async fn set_log_channel(
     .await
 }
 
-/// Clear the configured moderation log channel.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Clear the moderation log channel.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn clear_log_channel(ctx: Context<'_>) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_config_manager(ctx, &settings).await?;
@@ -100,8 +100,8 @@ pub async fn clear_log_channel(ctx: Context<'_>) -> Result<(), Error> {
     send_status(ctx, &settings, "Moderation log channel cleared.").await
 }
 
-/// Set the channel where leave application logs will be sent.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Set the channel where leave applications will be sent.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn set_leave_log_channel(
     ctx: Context<'_>,
     #[description = "Channel to receive leave application logs"] channel: ChannelId,
@@ -124,7 +124,7 @@ pub async fn set_leave_log_channel(
 }
 
 /// Clear the configured leave log channel.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn clear_leave_log_channel(ctx: Context<'_>) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_config_manager(ctx, &settings).await?;
@@ -139,7 +139,7 @@ pub async fn clear_leave_log_channel(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 /// Configure whether moderation actions must include a reason.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn set_require_reason(
     ctx: Context<'_>,
     #[description = "Whether moderation actions must include a reason"] value: bool,
@@ -156,8 +156,8 @@ pub async fn set_require_reason(
     send_status(ctx, &settings, format!("require_reason set to {value}.")).await
 }
 
-/// Configure whether slash command responses should be ephemeral.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Configure whether slash command responses are be ephemeral.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn set_ephemeral(
     ctx: Context<'_>,
     #[description = "Whether slash command confirmations should be ephemeral"] value: bool,
@@ -180,7 +180,7 @@ pub async fn set_ephemeral(
 }
 
 /// Grant moderator privileges to a server role.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn add_mod_role(
     ctx: Context<'_>,
     #[description = "Role allowed to use moderation commands"] role: RoleId,
@@ -203,7 +203,7 @@ pub async fn add_mod_role(
 }
 
 /// Revoke moderator privileges from a server role.
-#[poise::command(prefix_command, slash_command, guild_only)]
+#[poise::command(prefix_command, slash_command, guild_only, category = "Config")]
 pub async fn remove_mod_role(
     ctx: Context<'_>,
     #[description = "Role to remove from moderator access"] role: RoleId,

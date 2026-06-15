@@ -22,8 +22,8 @@ pub async fn leave(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Create a new leave application for a user.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// Create a new leave application.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Leaves")]
 pub async fn add(
     ctx: Context<'_>,
     #[description = "Applicant"] applicant: User,
@@ -98,8 +98,8 @@ pub async fn add(
     .await
 }
 
-/// List all active leave applications in this server.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// List all active leave applications.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Leaves")]
 pub async fn active(ctx: Context<'_>) -> Result<(), Error> {
     let (guild_id, settings) = guild_settings(ctx).await?;
     require_moderator(ctx, &settings, Permissions::MANAGE_MESSAGES).await?;
@@ -118,8 +118,8 @@ pub async fn active(ctx: Context<'_>) -> Result<(), Error> {
     send_leave_application_list(ctx, &settings, "Active leave applications", &applications).await
 }
 
-/// List all leave applications for a specific user.
-#[poise::command(prefix_command, slash_command, guild_only)]
+/// List all leave applications.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Leaves")]
 pub async fn user(
     ctx: Context<'_>,
     #[description = "Target user"] applicant: User,

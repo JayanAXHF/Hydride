@@ -73,7 +73,7 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
             let state = setup_state.clone();
             Box::pin(async move {
                 tracing::info!(bot = %ready.user.tag(), "registering commands");
-                run_startup_activity_reports(ctx, state.config()).await;
+                // run_startup_activity_reports(ctx, state.config()).await;
                 register_application_commands(ctx, framework, state.config()).await?;
                 Ok(state)
             })
@@ -139,6 +139,7 @@ async fn register_application_commands(
     Ok(())
 }
 
+#[allow(dead_code)]
 async fn run_startup_activity_reports(
     ctx: &poise::serenity_prelude::Context,
     config: &Arc<crate::config::BootstrapConfig>,

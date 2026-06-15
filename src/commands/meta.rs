@@ -9,19 +9,16 @@ use serenity::all::{CreateEmbed, CreateEmbedFooter, User, UserId};
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
-/// Responds with 'pong' to check if the bot is online.
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(prefix_command, slash_command, category = "Meta")]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("pong").await?;
     Ok(())
 }
 
-/// Displays help information or instructions for a specific command.
-#[poise::command(prefix_command, slash_command, track_edits)]
+/// Print help message.
+#[poise::command(prefix_command, slash_command, track_edits, category = "Meta")]
 pub async fn help(ctx: Context<'_>, #[rest] command: Option<String>) -> Result<(), Error> {
     let config = poise::builtins::HelpConfiguration {
-        show_subcommands: true,
-        show_context_menu_commands: false,
         ..Default::default()
     };
 
@@ -29,8 +26,8 @@ pub async fn help(ctx: Context<'_>, #[rest] command: Option<String>) -> Result<(
     Ok(())
 }
 
-/// Displays the current uptime of the bot.
-#[poise::command(prefix_command, slash_command)]
+/// How long has the bot been running.
+#[poise::command(prefix_command, slash_command, category = "Meta")]
 pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
     let Some(time) = START_TIMESTAMP.get() else {
         bail!("Unable to get start timestamp");
@@ -39,8 +36,8 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say(format!("Uptime: {}", passed)).await?;
     Ok(())
 }
-/// Displays the timestamp of when the bot was last restarted.
-#[poise::command(prefix_command, slash_command)]
+/// Displays when the bot was last started.
+#[poise::command(prefix_command, slash_command, category = "Meta")]
 pub async fn last_updated(ctx: Context<'_>) -> Result<(), Error> {
     let Some(time) = START_TIMESTAMP.get() else {
         bail!("Unable to get last update timestamp");
@@ -50,7 +47,7 @@ pub async fn last_updated(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Lists all users currently registered on the join-pinglist.
+/// List users on the join-pinglist.
 #[poise::command(
     prefix_command,
     slash_command,
@@ -75,7 +72,7 @@ pub async fn pinglist(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(CreateReply::default().embed(embed)).await?;
     Ok(())
 }
-/// Lists all user IDs registered on the server's banlist.
+/// Print banlist
 #[poise::command(
     prefix_command,
     slash_command,

@@ -3,7 +3,7 @@ use poise::CreateReply;
 use regex::RegexBuilder;
 use serenity::all::CreateEmbed;
 
-/// Manage word or phrase highlights.
+/// Manage highlights.
 #[poise::command(
     prefix_command,
     slash_command,
@@ -15,8 +15,14 @@ pub async fn highlight(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Add a new highlight pattern (regex format) to watch for.
-#[poise::command(prefix_command, slash_command, guild_only, rename = "add")]
+/// Add a new highlight pattern regex.
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    rename = "add",
+    category = "Highlights"
+)]
 pub async fn add(
     ctx: Context<'_>,
     #[description = "Regex pattern to watch for"]
@@ -89,8 +95,14 @@ pub async fn add(
     Ok(())
 }
 
-/// Remove a registered highlight pattern by its ID.
-#[poise::command(prefix_command, slash_command, guild_only, rename = "remove")]
+/// Remove a highlight by its ID.
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    rename = "remove",
+    category = "Highlights"
+)]
 pub async fn remove(
     ctx: Context<'_>,
     #[description = "Highlight ID (from /highlight list)"] id: i64,
@@ -123,8 +135,14 @@ pub async fn remove(
     Ok(())
 }
 
-/// List all your registered highlight patterns in this server.
-#[poise::command(prefix_command, slash_command, guild_only, rename = "list")]
+/// List all your highlights.
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    rename = "list",
+    category = "Highlights"
+)]
 pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = guild_id(ctx).await?;
     let (_, settings) = guild_settings(ctx).await?;
@@ -156,8 +174,14 @@ pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Test sample text against your registered highlight patterns to verify matches.
-#[poise::command(prefix_command, slash_command, guild_only, rename = "test")]
+/// Test sample text against your highlights.
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    rename = "test",
+    category = "Highlights"
+)]
 pub async fn test(
     ctx: Context<'_>,
     #[description = "Sample text to test your patterns against"]
@@ -181,7 +205,11 @@ pub async fn test(
         let mut builder = RegexBuilder::new(&record.pattern);
         builder.size_limit(1 << 16);
         builder.dfa_size_limit(1 << 16);
-        if builder.build().map(|re| re.is_match(&text)).unwrap_or(false) {
+        if builder
+            .build()
+            .map(|re| re.is_match(&text))
+            .unwrap_or(false)
+        {
             matched_patterns.push(record.pattern);
         }
     }
