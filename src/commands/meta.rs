@@ -106,7 +106,7 @@ async fn u64_to_user(ctx: Context<'_>, ids: Vec<u64>) -> Vec<User> {
     users
 }
 
-#[poise::command(prefix_command, slash_command, guild_cooldown = 1200)]
+#[poise::command(prefix_command, slash_command, guild_cooldown = 7200)]
 pub async fn revive(ctx: Context<'_>, #[rest] question: String) -> Result<(), Error> {
     let Some(revive_role_id) = ctx
         .data()
