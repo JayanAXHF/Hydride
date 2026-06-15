@@ -58,6 +58,8 @@ pub struct ModerationConfig {
     pub ephemeral_slash_responses: bool,
     #[serde(default = "default_max_case_results")]
     pub max_case_results: u8,
+    #[serde(default)]
+    pub revive_role_id: Option<u64>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -140,6 +142,7 @@ impl Default for ModerationConfig {
             require_reason: default_require_reason(),
             ephemeral_slash_responses: default_ephemeral_slash_responses(),
             max_case_results: default_max_case_results(),
+            revive_role_id: None,
         }
     }
 }

@@ -5,7 +5,7 @@ use crate::{
 use anyhow::bail;
 use futures::{self, StreamExt, stream};
 use poise::CreateReply;
-use serenity::all::{CreateEmbed, CreateEmbedFooter, User, UserId};
+use serenity::all::{CreateEmbed, CreateEmbedFooter, Mentionable, RoleId, User, UserId};
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
@@ -104,6 +104,30 @@ async fn u64_to_user(ctx: Context<'_>, ids: Vec<u64>) -> Vec<User> {
         .collect()
         .await;
     users
+}
+
+#[poise::command(prefix_command, slash_command, guild_cooldown = 1200)]
+pub async fn revive(ctx: Context<'_>, #[rest] question: String) -> Result<(), Error> {
+    let Some(revive_role_id) = ctx
+        .data()
+        .config()
+        .moderation
+        .revive_role_id
+        .map(|f| RoleId::new(f))
+    else {
+        ctx.say("No revive role configured").await?;
+        return Ok(());
+    };
+    let embed = CreateEmbed::new()
+        .title("Chat Revive!")
+        .description(format!(
+            "The chat is dead {}. Come back to life!",
+            revive_role_id.mention()
+        ))
+        .field("Question", question, false);
+    let reply = CreateReply::default().embed(embed);
+    ctx.send(reply).await?;
+    Ok(())
 }
 
 fn fmt_user(
