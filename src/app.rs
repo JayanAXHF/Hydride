@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::{Context, anyhow};
 use time::UtcDateTime;
+use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
 
 use crate::{bot, config::BootstrapConfig, db::Database, state::AppState};
@@ -25,6 +26,8 @@ pub async fn run() -> anyhow::Result<()> {
     let config = Arc::new(BootstrapConfig::load(&config_path, &banlist_path)?);
 
     init_tracing(&config.logging.filter)?;
+    info!(banned_ids = ?config.banlist.ids.len(), "Loaded ban list with ");
+    info!(pingable_members = ?config.join_pinglist.members.len(), "Loaded pinglist with");
 
     let database = Database::connect(&config.database.url)
         .await

@@ -2,7 +2,6 @@ use std::{fs, path::Path};
 
 use serde::Deserialize;
 use snafu::ResultExt;
-use tracing::info;
 
 use crate::error::{AppError, AppResult, ConfigParseSnafu, ConfigReadSnafu};
 
@@ -90,8 +89,6 @@ impl BootstrapConfig {
                 path: banlist_path.to_path_buf(),
             })?;
         config.banlist = banlist;
-        info!(banned_ids = ?config.banlist.ids.len(), "Loaded ban list with ");
-        info!(pingable_members = ?config.join_pinglist.members.len(), "Loaded pinglist with");
         config.validate()?;
         Ok(config)
     }
