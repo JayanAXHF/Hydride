@@ -17,6 +17,8 @@ pub struct BootstrapConfig {
     pub join_pinglist: PinglistConfig,
     #[serde(default)]
     pub banlist: UUIDBanlistConfig,
+    #[serde(default)]
+    pub welcome_msg: WelcomeMessageConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -72,6 +74,16 @@ pub struct PinglistConfig {
 pub struct UUIDBanlistConfig {
     #[serde(default)]
     pub ids: Vec<u64>,
+}
+
+#[derive(Default, Debug, Clone, Deserialize)]
+pub struct WelcomeMessageConfig {
+    #[serde(default)]
+    pub main_image_url: String,
+    #[serde(default)]
+    pub footer_image_url: String,
+    #[serde(default)]
+    pub welcome_channel_id: u64,
 }
 
 impl BootstrapConfig {
