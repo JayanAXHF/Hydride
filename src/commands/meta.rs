@@ -6,7 +6,8 @@ use anyhow::bail;
 use futures::{self, StreamExt, stream};
 use poise::CreateReply;
 use serenity::all::{
-    CreateAllowedMentions, CreateEmbed, CreateEmbedFooter, Mentionable, RoleId, User, UserId,
+    CreateAllowedMentions, CreateAttachment, CreateEmbed, CreateEmbedFooter, EditRole, Mentionable,
+    Role, RoleId, User, UserId,
 };
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
@@ -97,6 +98,37 @@ pub async fn banlist(ctx: Context<'_>) -> Result<(), Error> {
             now.format(&Rfc2822)?
         )));
     ctx.send(CreateReply::default().embed(embed)).await?;
+    Ok(())
+}
+
+/// Change the icon of a role by its ID
+#[poise::command(slash_command, guild_only, required_permissions = "MANAGE_ROLES")]
+pub async fn set_role_icon(
+    ctx: Context<'_>,
+    #[description = "The role to update"] role: Role,
+    #[description = "Attachment to use as the role icon"] icon: serenity::all::Attachment,
+) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().unwrap(); // can't be run outside a guild as set above
+
+    // Validate it's an image
+    let content_type = icon.content_type.as_deref().unwrap_or("");
+    if !content_type.starts_with("image/") {
+        ctx.say("Attachment must be an image.").await?;
+        return Ok(());
+    }
+
+    let bytes = icon.download().await?;
+
+    // CreateAttachment::bytes(data, filename) — serenity infers the type from the filename
+    let attachment = CreateAttachment::bytes(bytes, &icon.filename);
+
+    guild_id
+        .edit_role(ctx.http(), role.id, EditRole::new().icon(Some(&attachment)))
+        .await?;
+
+    ctx.say(format!("Updated icon for role **{}**.", role.name))
+        .await?;
+
     Ok(())
 }
 

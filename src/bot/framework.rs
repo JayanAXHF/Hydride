@@ -74,6 +74,7 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
             Box::pin(async move {
                 tracing::info!(bot = %ready.user.tag(), "registering commands");
                 // run_startup_activity_reports(ctx, state.config()).await;
+
                 register_application_commands(ctx, framework, state.config()).await?;
                 Ok(state)
             })
