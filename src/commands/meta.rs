@@ -5,7 +5,9 @@ use crate::{
 use anyhow::bail;
 use futures::{self, StreamExt, stream};
 use poise::CreateReply;
-use serenity::all::{CreateEmbed, CreateEmbedFooter, Mentionable, RoleId, User, UserId};
+use serenity::all::{
+    CreateAllowedMentions, CreateEmbed, CreateEmbedFooter, Mentionable, RoleId, User, UserId,
+};
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
@@ -125,7 +127,10 @@ pub async fn revive(ctx: Context<'_>, #[rest] question: String) -> Result<(), Er
             revive_role_id.mention()
         ))
         .field("Question", question, false);
-    let reply = CreateReply::default().embed(embed);
+    let reply = CreateReply::default()
+        .embed(embed)
+        .allowed_mentions(CreateAllowedMentions::default().all_roles(true))
+        .content(revive_role_id.mention().to_string());
     ctx.send(reply).await?;
     Ok(())
 }
