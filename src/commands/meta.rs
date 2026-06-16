@@ -132,6 +132,12 @@ pub async fn set_role_icon(
     Ok(())
 }
 
+#[poise::command(prefix_command)]
+pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
+    poise::builtins::register_application_commands_buttons(ctx).await?;
+    Ok(())
+}
+
 async fn u64_to_user(ctx: Context<'_>, ids: Vec<u64>) -> Vec<User> {
     let users: Vec<_> = stream::iter(ids)
         .filter_map(async |f| UserId::from(f).to_user(&ctx).await.ok())
