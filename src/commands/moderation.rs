@@ -235,7 +235,13 @@ pub async fn ban(
 }
 
 /// Unban a previously banned user.
-#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    category = "Moderation",
+    required_permissions = "MODERATE_MEMBERS"
+)]
 pub async fn unban(
     ctx: Context<'_>,
     #[description = "Target user"] user: User,
@@ -357,7 +363,13 @@ pub async fn purge(
     .await
 }
 
-#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    guild_only,
+    category = "Moderation",
+    required_permissions = "MODERATE_MEMBERS"
+)]
 pub async fn nick(
     ctx: Context<'_>,
     #[description = "Target User"] mut member: Member,
