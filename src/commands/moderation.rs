@@ -381,7 +381,7 @@ async fn get_messages_from_user(
         messages_to_delete.extend(user_messages);
     }
 
-    todo!()
+    Ok(messages_to_delete)
 }
 
 async fn get_n_messages(amount: u8, ctx: &Context<'_>) -> Result<Vec<Message>, Error> {
