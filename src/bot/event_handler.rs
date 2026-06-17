@@ -48,8 +48,10 @@ impl EventHandler for Handler {
                 let _ = id.direct_message(&ctx, message.clone()).await;
             }
         }
-        let embed = build_welcome_embed(new_member, &self.cfg.welcome_msg);
-        let msg = CreateMessage::new().embed(embed);
+        let embed = build_welcome_embed(&new_member, &self.cfg.welcome_msg);
+        let msg = CreateMessage::new()
+            .embed(embed)
+            .content(new_member.mention().to_string());
         let channel = ChannelId::new(self.cfg.welcome_msg.welcome_channel_id);
         if let Err(e) = channel.send_message(&ctx, msg).await {
             error!(?e, "Error occured:");
@@ -95,7 +97,7 @@ macro_rules! define_channel {
     };
 }
 
-fn build_welcome_embed(member: Member, welcome_msg_config: &WelcomeMessageConfig) -> CreateEmbed {
+fn build_welcome_embed(member: &Member, welcome_msg_config: &WelcomeMessageConfig) -> CreateEmbed {
     define_channel! {
         RULES_CHANNEL => 1487171920410443836;
         FAQ_CHANNEL => 1494822429711663297;
