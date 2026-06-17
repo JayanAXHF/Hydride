@@ -1,5 +1,5 @@
 use poise::serenity_prelude::{GetMessages, Permissions, Timestamp, User};
-use serenity::all::{Mentionable, Message};
+use serenity::all::{EditMember, Member, Mentionable, Message};
 
 use crate::{
     commands::{
@@ -355,6 +355,56 @@ pub async fn purge(
         format!("Purged {count} messages with case #{}.{}", case.id, suffix),
     )
     .await
+}
+
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
+pub async fn nick(
+    ctx: Context<'_>,
+    #[description = "Target User"] mut member: Member,
+    #[description = "New displayname"] new_name: String,
+    #[rest]
+    #[description = "Reason for change"]
+    reason: Option<String>,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    let reason = reason.unwrap_or_else(|| "Innappropriate username".to_string());
+    let edit_member = EditMember::new().nickname(&new_name);
+    let old_nick = member.display_name().to_string();
+    member.edit(&ctx, edit_member).await?;
+
+    let (case, logged) = create_case_and_log(
+        ctx,
+        NewModerationCase {
+            guild_id: guild_id.into(),
+            action_type: ModerationActionType::NicknameChange,
+            target_user_id: Some(member.user.id.into()),
+            moderator_user_id: ctx.author().id.get() as i64,
+            message_id: None,
+            reason: Some(reason),
+            duration_seconds: None,
+            details: Some(format!("Old: {old_nick}; New: {new_name}")),
+            expires_at: None,
+        },
+    )
+    .await?;
+
+    let suffix = if logged {
+        ""
+    } else {
+        " Audit channel delivery failed."
+    };
+    send_status(
+        ctx,
+        &settings,
+        format!(
+            "Changed nick of {} from {old_nick} to {new_name}. Case ID #{}. {suffix}",
+            member.mention(),
+            case.id
+        ),
+    )
+    .await?;
+
+    Ok(())
 }
 
 async fn get_messages_from_user(

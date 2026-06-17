@@ -11,6 +11,7 @@ pub enum ModerationActionType {
     Unban,
     Purge,
     Note,
+    NicknameChange,
 }
 
 impl ModerationActionType {
@@ -23,6 +24,7 @@ impl ModerationActionType {
             Self::Unban => "unban",
             Self::Purge => "purge",
             Self::Note => "note",
+            Self::NicknameChange => "renick",
         }
     }
 }
@@ -38,6 +40,7 @@ impl FromStr for ModerationActionType {
             "unban" => Ok(Self::Unban),
             "purge" => Ok(Self::Purge),
             "note" => Ok(Self::Note),
+            "renick" => Ok(Self::NicknameChange),
             _ => Err(AppError::GuildOnly), // this should not be possible, as this is only used when getting cases from the db
         }
     }
