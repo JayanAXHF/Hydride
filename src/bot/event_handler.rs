@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use serenity::{
     all::{
-        ChannelId, Color, CreateEmbed, CreateMessage, EventHandler, Member, Mentionable, UserId,
+        ChannelId, Color, CreateEmbed, CreateEmbedFooter, CreateMessage, EventHandler,
+        GuildMemberUpdateEvent, Member, Mentionable, UserId,
     },
     async_trait,
 };
@@ -54,6 +55,36 @@ impl EventHandler for Handler {
             error!(?e, "Error occured:");
         }
     }
+    async fn guild_member_update(
+        &self,
+        ctx: poise::serenity_prelude::Context,
+        old_if_available: Option<Member>,
+        new: Option<Member>,
+        event: GuildMemberUpdateEvent,
+    ) {
+        // Ensure we have both old and new member state to compare
+        if let Some(old) = old_if_available
+            && let Some(new) = new
+        {
+            // Check if user gained the premium_since field (started boosting)
+            if old.premium_since.is_none() && event.premium_since.is_some() {
+                let total_boosts = if let Some(guild) = event.guild_id.to_guild_cached(&ctx)
+                    && let Some(boosts) = guild.premium_subscription_count
+                {
+                    boosts
+                } else {
+                    0
+                };
+                let embed = build_boost_embed(new, total_boosts);
+                let message = CreateMessage::new().embed(embed);
+                let channel = ChannelId::new(self.cfg.welcome_msg.boost_channel_id);
+
+                if let Err(e) = channel.send_message(&ctx, message).await {
+                    error!(?e, "Error occured:");
+                }
+            }
+        }
+    }
 }
 
 macro_rules! define_channel {
@@ -90,4 +121,18 @@ fn build_welcome_embed(member: Member, welcome_msg_config: &WelcomeMessageConfig
         .description(lines.join("\n"))
         .thumbnail(&welcome_msg_config.main_image_url)
         .image(&welcome_msg_config.footer_image_url)
+}
+
+fn build_boost_embed(member: Member, total_boosts: u64) -> CreateEmbed {
+    let image = member.face();
+    let body = format!(
+        "{} just boosted the server! Thank you! You can also boost the server for cool perks! <:Tickles:1482232113578115143>",
+        member.mention()
+    );
+    CreateEmbed::new()
+        .thumbnail(image)
+        .description(body)
+        .footer(CreateEmbedFooter::new(format!(
+            "Server has {total_boosts} boosts"
+        )))
 }

@@ -84,6 +84,8 @@ pub struct WelcomeMessageConfig {
     pub footer_image_url: String,
     #[serde(default)]
     pub welcome_channel_id: u64,
+    #[serde(default)]
+    pub boost_channel_id: u64,
 }
 
 impl BootstrapConfig {
