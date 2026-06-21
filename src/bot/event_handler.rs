@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use serenity::{
     all::{
         ChannelId, Color, CreateEmbed, CreateEmbedFooter, CreateMessage, EventHandler,
@@ -9,14 +7,14 @@ use serenity::{
 };
 use tracing::{error, info};
 
-use crate::config::{BootstrapConfig, WelcomeMessageConfig};
+use crate::{config::WelcomeMessageConfig, state::AppState};
 
 pub struct Handler {
-    cfg: Arc<BootstrapConfig>,
+    cfg: AppState,
 }
 
 impl Handler {
-    pub fn new(cfg: Arc<BootstrapConfig>) -> Self {
+    pub fn new(cfg: AppState) -> Self {
         Self { cfg }
     }
 }
@@ -29,7 +27,14 @@ impl EventHandler for Handler {
         new_member: Member,
     ) {
         let new_member_uuid: u64 = new_member.user.id.into();
-        if self.cfg.banlist.ids.contains(&new_member_uuid) {
+        let records = self
+            .cfg
+            .blacklist_database()
+            .blacklist_for_guild(new_member.guild_id.into())
+            .await
+            .unwrap();
+        let mut ids = records.iter().map(|f| f.user_id as u64);
+        if ids.any(|id| id == new_member_uuid) {
             info!(new_member_uuid, dname = ?new_member.display_name(), "Member on banlist joined");
             let embed = CreateEmbed::new()
                 .color(Color::RED)
@@ -40,6 +45,7 @@ impl EventHandler for Handler {
             let message = CreateMessage::new().embed(embed);
             for id in self
                 .cfg
+                .config()
                 .join_pinglist
                 .members
                 .iter()
@@ -48,11 +54,12 @@ impl EventHandler for Handler {
                 let _ = id.direct_message(&ctx, message.clone()).await;
             }
         }
-        let embed = build_welcome_embed(&new_member, &self.cfg.welcome_msg);
+        let cfg = self.cfg.config();
+        let embed = build_welcome_embed(&new_member, &cfg.welcome_msg);
         let msg = CreateMessage::new()
             .embed(embed)
             .content(new_member.mention().to_string());
-        let channel = ChannelId::new(self.cfg.welcome_msg.welcome_channel_id);
+        let channel = ChannelId::new(cfg.welcome_msg.welcome_channel_id);
         if let Err(e) = channel.send_message(&ctx, msg).await {
             error!(?e, "Error occured:");
         }
@@ -79,7 +86,7 @@ impl EventHandler for Handler {
                 };
                 let embed = build_boost_embed(new, total_boosts);
                 let message = CreateMessage::new().embed(embed);
-                let channel = ChannelId::new(self.cfg.welcome_msg.boost_channel_id);
+                let channel = ChannelId::new(self.cfg.config().welcome_msg.boost_channel_id);
 
                 if let Err(e) = channel.send_message(&ctx, message).await {
                     error!(?e, "Error occured:");

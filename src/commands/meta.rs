@@ -75,31 +75,6 @@ pub async fn pinglist(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(CreateReply::default().embed(embed)).await?;
     Ok(())
 }
-/// Print banlist
-#[poise::command(
-    prefix_command,
-    slash_command,
-    required_permissions = "MODERATE_MEMBERS"
-)]
-pub async fn banlist(ctx: Context<'_>) -> Result<(), Error> {
-    let banlist = ctx.data().config().banlist.ids.clone();
-    let users = u64_to_user(ctx, banlist);
-    let mut embed_desc = String::new();
-    for (i, user) in users.await.iter().enumerate() {
-        write!(embed_desc, "{}. ", i + 1)?;
-        fmt_user(user, &mut embed_desc)?;
-    }
-    let now = time::UtcDateTime::now();
-    let embed = CreateEmbed::new()
-        .title("Banlist")
-        .description(embed_desc)
-        .footer(CreateEmbedFooter::new(format!(
-            "Last updated at {}",
-            now.format(&Rfc2822)?
-        )));
-    ctx.send(CreateReply::default().embed(embed)).await?;
-    Ok(())
-}
 
 /// Change the icon of a role by its ID
 #[poise::command(slash_command, guild_only, required_permissions = "MANAGE_ROLES")]
@@ -172,8 +147,7 @@ pub async fn revive(ctx: Context<'_>, #[rest] question: String) -> Result<(), Er
     ctx.send(reply).await?;
     Ok(())
 }
-
-fn fmt_user(
+pub fn fmt_user(
     User { id, name, .. }: &User,
     f: &mut impl std::fmt::Write,
 ) -> Result<(), std::fmt::Error> {

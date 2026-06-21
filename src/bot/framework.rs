@@ -87,7 +87,7 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION;
 
-    let handler = Handler::new(state.config().clone());
+    let handler = Handler::new(state.clone());
     let mut client = ClientBuilder::new(token, intents)
         .event_handler(handler)
         .framework(framework)

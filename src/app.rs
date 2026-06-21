@@ -20,13 +20,9 @@ pub async fn run() -> anyhow::Result<()> {
     let config_path = env::var("MODBOT_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("config.toml"));
-    let banlist_path = env::var("MODBOT_UUID_BANLIST")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("banlist.toml"));
-    let config = Arc::new(BootstrapConfig::load(&config_path, &banlist_path)?);
+    let config = Arc::new(BootstrapConfig::load(&config_path)?);
 
     init_tracing(&config.logging.filter)?;
-    info!(banned_ids = ?config.banlist.ids.len(), "Loaded ban list with ");
     info!(pingable_members = ?config.join_pinglist.members.len(), "Loaded pinglist with");
     info!(revive_role_id = ?config.moderation.revive_role_id, "Loaded ");
 
@@ -51,7 +47,22 @@ pub async fn run() -> anyhow::Result<()> {
         .await
         .context("failed to build initial highlight cache")?;
 
-    let state = AppState::new(config, database, highlights_database, highlight_cache);
+    let blacklist_database = crate::db::BlacklistDatabase::connect(&config.database.blacklist_url)
+        .await
+        .context("failed to initialize blacklist database")?;
+    blacklist_database
+        .migrate()
+        .await
+        .context("failed to run blacklist database migrations")?;
+
+    let state = AppState::new(
+        config,
+        database,
+        highlights_database,
+        highlight_cache,
+        blacklist_database,
+    );
+
     bot::framework::run(state).await
 }
 

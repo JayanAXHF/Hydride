@@ -14,6 +14,7 @@ pub struct AppState {
     database: Database,
     highlights_database: crate::db::HighlightsDatabase,
     highlight_cache: crate::domain::highlights::SharedHighlightCache,
+    blacklist_database: crate::db::BlacklistDatabase,
 }
 
 impl AppState {
@@ -22,12 +23,14 @@ impl AppState {
         database: Database,
         highlights_database: crate::db::HighlightsDatabase,
         highlight_cache: crate::domain::highlights::SharedHighlightCache,
+        blacklist_database: crate::db::BlacklistDatabase,
     ) -> Self {
         Self {
             config,
             database,
             highlights_database,
             highlight_cache,
+            blacklist_database,
         }
     }
 
@@ -45,6 +48,9 @@ impl AppState {
 
     pub fn highlight_cache(&self) -> &crate::domain::highlights::SharedHighlightCache {
         &self.highlight_cache
+    }
+    pub fn blacklist_database(&self) -> &crate::db::BlacklistDatabase {
+        &self.blacklist_database
     }
 
     pub async fn guild_settings(&self, guild_id: GuildId) -> AppResult<RuntimeGuildSettings> {

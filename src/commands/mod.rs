@@ -1,3 +1,4 @@
+pub mod banlist;
 pub mod cases;
 pub mod config;
 pub mod highlights;
@@ -33,10 +34,10 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         meta::help(),
         meta::uptime(),
         meta::pinglist(),
-        meta::banlist(),
         meta::revive(),
         meta::set_role_icon(),
         meta::register(),
+        banlist::banlist(),
         moderation::warn(),
         moderation::timeout(),
         moderation::kick(),

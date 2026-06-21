@@ -16,8 +16,6 @@ pub struct BootstrapConfig {
     #[serde(default)]
     pub join_pinglist: PinglistConfig,
     #[serde(default)]
-    pub banlist: UUIDBanlistConfig,
-    #[serde(default)]
     pub welcome_msg: WelcomeMessageConfig,
 }
 
@@ -40,6 +38,8 @@ pub struct DatabaseConfig {
     pub url: String,
     #[serde(default = "default_highlights_database_url")]
     pub highlights_url: String,
+    #[serde(default = "default_blacklist_database_url")]
+    pub blacklist_url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -71,12 +71,6 @@ pub struct PinglistConfig {
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
-pub struct UUIDBanlistConfig {
-    #[serde(default)]
-    pub ids: Vec<u64>,
-}
-
-#[derive(Default, Debug, Clone, Deserialize)]
 pub struct WelcomeMessageConfig {
     #[serde(default)]
     pub main_image_url: String,
@@ -89,22 +83,14 @@ pub struct WelcomeMessageConfig {
 }
 
 impl BootstrapConfig {
-    pub fn load(path: &Path, banlist_path: &Path) -> AppResult<Self> {
+    pub fn load(path: &Path) -> AppResult<Self> {
         let raw = fs::read_to_string(path).context(ConfigReadSnafu {
             path: path.to_path_buf(),
         })?;
 
-        let banlist_raw = fs::read_to_string(banlist_path).context(ConfigReadSnafu {
-            path: banlist_path.to_path_buf(),
-        })?;
-        let mut config: Self = toml::from_str(&raw).context(ConfigParseSnafu {
+        let config: Self = toml::from_str(&raw).context(ConfigParseSnafu {
             path: path.to_path_buf(),
         })?;
-        let banlist: UUIDBanlistConfig =
-            toml::from_str(&banlist_raw).context(ConfigParseSnafu {
-                path: banlist_path.to_path_buf(),
-            })?;
-        config.banlist = banlist;
         config.validate()?;
         Ok(config)
     }
@@ -175,6 +161,9 @@ fn default_database_url() -> String {
 
 fn default_highlights_database_url() -> String {
     "sqlite://highlights.db".into()
+}
+fn default_blacklist_database_url() -> String {
+    "sqlite://blacklist.db".into()
 }
 
 fn default_log_filter() -> String {
