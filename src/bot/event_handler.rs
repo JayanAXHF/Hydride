@@ -133,15 +133,19 @@ fn build_welcome_embed(member: &Member, welcome_msg_config: &WelcomeMessageConfi
 }
 
 fn build_boost_embed(member: Member, total_boosts: u64) -> CreateEmbed {
+    define_channel! {
+        PERKS_CHANNEL => 1490723619515535423
+    };
     let image = member.face();
     let body = format!(
-        "{} just boosted the server! Thank you! You can also boost the server for cool perks! <:Tickles:1482232113578115143>",
-        member.mention()
+        "{} just boosted the server!\n Thank you so much!\nPerks: {}",
+        member.mention(),
+        PERKS_CHANNEL.mention()
     );
     CreateEmbed::new()
         .thumbnail(image)
         .description(body)
         .footer(CreateEmbedFooter::new(format!(
-            "Server has {total_boosts} boosts"
+            "{total_boosts} people are boosting the server!"
         )))
 }
