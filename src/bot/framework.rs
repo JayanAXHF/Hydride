@@ -5,7 +5,7 @@ use poise::{
     BoxFuture,
     serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
 };
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{
     bot::{activity, event_handler::Handler},
@@ -67,6 +67,7 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
                     info!("Executed command {}!", ctx.command().qualified_name);
                 })
             },
+            on_error: |err| Box::pin(async move { error!("Error occured: {err}") }),
             ..Default::default()
         })
         .setup(move |ctx, ready, framework| {

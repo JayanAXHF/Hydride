@@ -26,6 +26,15 @@ impl EventHandler for Handler {
         ctx: poise::serenity_prelude::Context,
         new_member: Member,
     ) {
+        if !self
+            .cfg
+            .config()
+            .discord
+            .dev_guild_ids
+            .contains(&(new_member.guild_id.into()))
+        {
+            return;
+        }
         let new_member_uuid: u64 = new_member.user.id.into();
         let records = self
             .cfg
@@ -75,6 +84,15 @@ impl EventHandler for Handler {
         if let Some(old) = old_if_available
             && let Some(new) = new
         {
+            if !self
+                .cfg
+                .config()
+                .discord
+                .dev_guild_ids
+                .contains(&(new.guild_id.into()))
+            {
+                return;
+            }
             // Check if user gained the premium_since field (started boosting)
             if old.premium_since.is_none() && event.premium_since.is_some() {
                 let total_boosts = if let Some(guild) = event.guild_id.to_guild_cached(&ctx)
