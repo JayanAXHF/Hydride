@@ -125,7 +125,9 @@ fn case_insensitive_prefix<'a>(
             return Ok(None);
         }
 
-        let (candidate, rest) = content.split_at(prefix.len());
+        let Some((candidate, rest)) = content.split_at_checked(prefix.len()) else {
+            return Ok(None);
+        };
         if candidate.eq_ignore_ascii_case(prefix) {
             Ok(Some((candidate, rest)))
         } else {
