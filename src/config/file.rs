@@ -62,6 +62,8 @@ pub struct ModerationConfig {
     pub max_case_results: u8,
     #[serde(default)]
     pub revive_role_id: Option<u64>,
+    #[serde(default)]
+    pub error_log_channel: Option<u64>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -137,6 +139,7 @@ impl Default for LoggingConfig {
 impl Default for ModerationConfig {
     fn default() -> Self {
         Self {
+            error_log_channel: None,
             default_log_channel_id: None,
             default_leave_log_channel_id: None,
             require_reason: default_require_reason(),

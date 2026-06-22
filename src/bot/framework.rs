@@ -5,6 +5,7 @@ use poise::{
     BoxFuture,
     serenity_prelude::{ClientBuilder, GatewayIntents, GuildId, Message, UserId},
 };
+use serenity::all::ChannelId;
 use tracing::{error, info};
 
 use crate::{
@@ -67,7 +68,20 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
                     info!("Executed command {}!", ctx.command().qualified_name);
                 })
             },
-            on_error: |err| Box::pin(async move { error!("Error occured: {err}") }),
+            on_error: |err| {
+                Box::pin(async move {
+                    error!("Error occured: {err}");
+                    if let Some(ctx) = err.ctx()
+                        && let Some(channel) = ctx.data().config().moderation.error_log_channel
+                    {
+                        let channel_id = ChannelId::new(channel);
+                        if let Err(e) = channel_id.say(&ctx, format!("Error occured: {err}")).await
+                        {
+                            error!("Error sending log message: {e}");
+                        }
+                    }
+                })
+            },
             ..Default::default()
         })
         .setup(move |ctx, ready, framework| {
