@@ -39,7 +39,7 @@ pub async fn add(
     builder.dfa_size_limit(1 << 16);
     if let Err(e) = builder.build() {
         send_status(ctx, &settings, format!("Invalid regex pattern: {e}")).await?;
-        return Ok(());
+        return Err(e.into());
     }
 
     let db = ctx.data().highlights_database();

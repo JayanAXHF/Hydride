@@ -70,15 +70,19 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
             },
             on_error: |err| {
                 Box::pin(async move {
-                    error!("Error occured: {err}");
-                    if let Some(ctx) = err.ctx()
-                        && let Some(channel) = ctx.data().config().moderation.error_log_channel
-                    {
-                        let channel_id = ChannelId::new(channel);
-                        if let Err(e) = channel_id.say(&ctx, format!("Error occured: {err}")).await
-                        {
-                            error!("Error sending log message: {e}");
+                    if let Some(ctx) = err.ctx() {
+                        error!("Command error: {err}");
+
+                        if let Some(channel) = ctx.data().config().moderation.error_log_channel {
+                            let _ = ChannelId::new(channel)
+                                .say(ctx.serenity_context(), format!("Command error: {err}"))
+                                .await;
                         }
+                    } else {
+                        error!("Framework error: {}", err);
+                    }
+                    if let Err(e) = poise::builtins::on_error(err).await {
+                        tracing::error!("Fatal error while sending error message: {}", e);
                     }
                 })
             },
