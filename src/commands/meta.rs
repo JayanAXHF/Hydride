@@ -12,6 +12,8 @@ use serenity::all::{
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
+const SOURCE: &str = "https://github.com/jayanaxhf/hydride";
+
 #[poise::command(prefix_command, slash_command, category = "Meta")]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("pong").await?;
@@ -47,6 +49,11 @@ pub async fn last_updated(ctx: Context<'_>) -> Result<(), Error> {
     };
     let formatted = time.format(&Rfc2822)?;
     ctx.say(format!("Last Updated at {formatted}")).await?;
+    Ok(())
+}
+#[poise::command(prefix_command, slash_command, category = "Meta")]
+pub async fn source(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say(SOURCE).await?;
     Ok(())
 }
 

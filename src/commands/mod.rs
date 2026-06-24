@@ -37,6 +37,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         meta::revive(),
         meta::set_role_icon(),
         meta::register(),
+        meta::source(),
         banlist::banlist(),
         moderation::warn(),
         moderation::timeout(),
