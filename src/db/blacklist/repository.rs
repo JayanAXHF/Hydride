@@ -30,14 +30,16 @@ impl BlacklistDatabase {
         &self,
         guild_id: i64,
         user_id: i64,
+        reason: Option<String>,
     ) -> AppResult<Option<BlacklistRecord>> {
         let result = query(
-            "INSERT INTO blacklist (guild_id, user_id, created_at)
-             VALUES (?1, ?2, strftime('%s', 'now'))
+            "INSERT INTO blacklist (guild_id, user_id, reason, created_at)
+             VALUES (?1, ?2, ?3, strftime('%s', 'now'))
              ON CONFLICT(guild_id, user_id) DO NOTHING",
         )
         .bind(guild_id)
         .bind(user_id)
+        .bind(reason)
         .execute(&self.pool)
         .await
         .context(DatabaseSnafu)?;
@@ -46,7 +48,7 @@ impl BlacklistDatabase {
             Ok(None)
         } else {
             let record = query_as::<_, BlacklistRecord>(
-                "SELECT id, guild_id, user_id, created_at
+                "SELECT id, guild_id, user_id, reason, created_at
                  FROM blacklist
                  WHERE guild_id = ?1 AND user_id = ?2",
             )
@@ -79,7 +81,7 @@ impl BlacklistDatabase {
     /// All blacklist for a single guild (used to rebuild just that guild's cache entry).
     pub async fn blacklist_for_guild(&self, guild_id: i64) -> AppResult<Vec<BlacklistRecord>> {
         query_as::<_, BlacklistRecord>(
-            "SELECT id, guild_id, user_id, created_at
+            "SELECT id, guild_id, user_id, reason, created_at
              FROM blacklist
              WHERE guild_id = ?1
              ORDER BY id ASC",

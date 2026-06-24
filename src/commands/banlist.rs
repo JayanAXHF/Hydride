@@ -1,4 +1,4 @@
-use crate::commands::{Context, Error, meta::fmt_user};
+use crate::commands::{Context, Error, guild_settings, meta::fmt_user, normalized_reason};
 use poise::CreateReply;
 use serenity::all::{CreateEmbed, CreateEmbedFooter, User, UserId};
 use std::fmt::Write;
@@ -42,7 +42,11 @@ pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
             UtcDateTime::from_unix_timestamp(blacklist_record.created_at)?.format(&Rfc2822)?;
 
         fmt_user(&user, &mut embed_desc)?;
-        writeln!(embed_desc, " #{} at {}", blacklist_record.id, time)?;
+        write!(embed_desc, " #{} at {}", blacklist_record.id, time)?;
+        if let Some(ref reason) = blacklist_record.reason {
+            write!(embed_desc, " - {reason}")?;
+        }
+        writeln!(embed_desc)?;
     }
 
     let now = time::UtcDateTime::now();
@@ -67,11 +71,20 @@ pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     required_permissions = "MODERATE_MEMBERS",
     guild_only
 )]
-pub async fn add(ctx: Context<'_>, user: User) -> Result<(), Error> {
+pub async fn add(
+    ctx: Context<'_>,
+    #[description = "Target user"] user: User,
+    #[description = "Reason for adding to the banlist"]
+    #[rest]
+    reason: Option<String>,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    let reason = normalized_reason(&settings, reason)?;
+
     let db = ctx.data().blacklist_database();
 
     let record = db
-        .add_blacklist(ctx.guild_id().unwrap().into(), user.id.into())
+        .add_blacklist(guild_id.get() as i64, user.id.get() as i64, reason)
         .await?;
 
     if let Some(record) = record {
