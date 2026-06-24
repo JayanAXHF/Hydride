@@ -17,11 +17,8 @@ pub async fn run(cli: Cli) -> Result<(), AppError> {
     )?;
     let rendered = with_heading(&changelog, resolved.output.heading.as_deref());
     let mut chunks = chunk_for_discord(&rendered, resolved.output.max_content_chars);
-    let now = Timestamp::now();
-    let timestamp = format!(
-        "Last updated at {}",
-        now.strftime("%A, %B %d, %Y at %-I:%M %P")
-    );
+    let now = Timestamp::now().as_second();
+    let timestamp = format!("Last updated at <t:{}:F>, <t:{}:R>", now, now);
     if let Some(first) = chunks.first_mut() {
         *first = format!("{timestamp}\n{first}");
     }
