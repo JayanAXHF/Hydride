@@ -194,8 +194,12 @@ pub async fn ban(
     let reason = normalized_reason(&settings, reason)?;
     ctx.defer_ephemeral().await?;
 
-    let target = fetch_target_member(ctx, guild_id, user.id).await?;
-    ensure_action_target(ctx, &guild, &actor, &target, Permissions::BAN_MEMBERS).await?;
+    let target = fetch_target_member(ctx, guild_id, user.id).await;
+
+    if let Ok(ref member) = target {
+        ensure_action_target(ctx, &guild, &actor, member, Permissions::BAN_MEMBERS).await?;
+    }
+
     guild_id
         .ban_with_reason(
             ctx.serenity_context(),
