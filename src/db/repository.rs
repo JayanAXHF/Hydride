@@ -346,6 +346,25 @@ impl Database {
         .context(DatabaseSnafu)
     }
 
+    pub async fn list_expired_tempban_cases(
+        &self,
+        now: i64,
+    ) -> AppResult<Vec<ModerationCaseRecord>> {
+        query_as::<_, ModerationCaseRecord>(
+            "SELECT id, guild_id, action_type, target_user_id, moderator_user_id, reason,
+                message_id, duration_seconds, details, created_at, expires_at, audit_log_channel_id, audit_log_message_id
+             FROM moderation_cases
+             WHERE action_type = 'ban'
+               AND expires_at IS NOT NULL
+               AND expires_at <= ?1
+             ORDER BY expires_at ASC, created_at ASC",
+        )
+        .bind(now)
+        .fetch_all(&self.pool)
+        .await
+        .context(DatabaseSnafu)
+    }
+
     pub async fn add_note(
         &self,
         case_id: i64,

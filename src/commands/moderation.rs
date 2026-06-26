@@ -1,5 +1,6 @@
 use poise::serenity_prelude::{GetMessages, Permissions, Timestamp, User};
-use serenity::all::{EditMember, Member, Mentionable, Message};
+use serenity::all::{EditMember, Member, Mentionable, Message, UserId};
+use tokio::time::{Duration, sleep};
 
 use crate::{
     commands::{
@@ -7,6 +8,8 @@ use crate::{
         guild_settings, normalized_message_id, normalized_reason, require_moderator, send_status,
     },
     domain::actions::{ModerationActionType, NewModerationCase},
+    domain::logging,
+    state::AppState,
     util::parse_duration,
 };
 
@@ -234,6 +237,85 @@ pub async fn ban(
         ctx,
         &settings,
         format!("Banned {} with case #{}.{}", user.tag(), case.id, suffix),
+    )
+    .await
+}
+
+/// Ban a user for a limited duration.
+#[poise::command(prefix_command, slash_command, guild_only, category = "Moderation")]
+pub async fn tempban(
+    ctx: Context<'_>,
+    #[description = "Target user"] user: User,
+    #[description = "Duration like 30m, 4h, 7d"] duration: String,
+    #[description = "Related message ID"]
+    #[rename = "message-id"]
+    message_id: Option<u64>,
+    #[description = "Reason for tempban"]
+    #[rest]
+    reason: Option<String>,
+) -> Result<(), Error> {
+    let (guild_id, settings) = guild_settings(ctx).await?;
+    let (_guild_id, guild, actor) =
+        require_moderator(ctx, &settings, Permissions::BAN_MEMBERS).await?;
+    let duration_seconds = parse_duration(&duration)?;
+    let message_id = normalized_message_id(message_id)?;
+    let reason = normalized_reason(&settings, reason)?;
+    ctx.defer_ephemeral().await?;
+
+    let target = fetch_target_member(ctx, guild_id, user.id).await;
+
+    if let Ok(ref member) = target {
+        ensure_action_target(ctx, &guild, &actor, member, Permissions::BAN_MEMBERS).await?;
+    }
+
+    guild_id
+        .ban_with_reason(
+            ctx.serenity_context(),
+            user.id,
+            0,
+            reason.as_deref().unwrap_or("No reason provided"),
+        )
+        .await?;
+
+    let expires_at = time::OffsetDateTime::now_utc().unix_timestamp() + duration_seconds;
+    schedule_tempban_unban(
+        ctx.serenity_context().clone(),
+        guild_id,
+        user.id,
+        duration_seconds,
+    );
+
+    let (case, logged) = create_case_and_log(
+        ctx,
+        NewModerationCase {
+            guild_id: guild_id.get() as i64,
+            action_type: ModerationActionType::Ban,
+            target_user_id: Some(user.id.get() as i64),
+            moderator_user_id: ctx.author().id.get() as i64,
+            message_id,
+            reason,
+            duration_seconds: Some(duration_seconds),
+            details: Some(format!("Temporary ban until {expires_at}")),
+            expires_at: Some(expires_at),
+        },
+    )
+    .await?;
+
+    let suffix = if logged {
+        ""
+    } else {
+        " Audit channel delivery failed."
+    };
+    send_status(
+        ctx,
+        &settings,
+        format!(
+            "Temporarily banned {} for {} with case #{}.{}",
+            user.tag(),
+            duration,
+            case.id,
+            suffix
+        ),
     )
     .await
 }
@@ -485,4 +567,106 @@ async fn get_n_messages(amount: u8, ctx: &Context<'_>) -> Result<Vec<Message>, E
         messages_to_delete.extend(messages);
     }
     Ok(messages_to_delete)
+}
+
+fn schedule_tempban_unban(
+    serenity_context: poise::serenity_prelude::Context,
+    guild_id: poise::serenity_prelude::GuildId,
+    user_id: poise::serenity_prelude::UserId,
+    duration_seconds: i64,
+) {
+    tokio::spawn(async move {
+        let wait_seconds = u64::try_from(duration_seconds).unwrap_or(0);
+        sleep(Duration::from_secs(wait_seconds)).await;
+
+        if let Err(error) = guild_id.unban(&serenity_context, user_id).await {
+            tracing::error!(
+                guild_id = guild_id.get(),
+                user_id = user_id.get(),
+                %error,
+                "failed to unban user after tempban duration"
+            );
+        }
+    });
+}
+
+pub async fn reconcile_expired_tempbans(
+    ctx: &poise::serenity_prelude::Context,
+    state: &AppState,
+    bot_user_id: UserId,
+) -> Result<(), Error> {
+    let now = time::OffsetDateTime::now_utc().unix_timestamp();
+    let expired_cases = state.database().list_expired_tempban_cases(now).await?;
+
+    for case in expired_cases {
+        let Some(target_user_id) = case.target_user_id else {
+            continue;
+        };
+
+        let guild_id = poise::serenity_prelude::GuildId::new(case.guild_id as u64);
+        let user_id = UserId::new(target_user_id as u64);
+
+        if let Err(error) = guild_id.unban(ctx, user_id).await {
+            tracing::warn!(
+                guild_id = guild_id.get(),
+                user_id = user_id.get(),
+                case_id = case.id,
+                %error,
+                "failed to unban expired tempban during startup reconciliation"
+            );
+            continue;
+        }
+
+        let unban_case = NewModerationCase {
+            guild_id: case.guild_id,
+            action_type: ModerationActionType::Unban,
+            target_user_id: case.target_user_id,
+            moderator_user_id: bot_user_id.get() as i64,
+            message_id: None,
+            reason: Some("Automatic unban after tempban expiry".into()),
+            duration_seconds: None,
+            details: Some(format!(
+                "Automatic unban for expired tempban case #{}",
+                case.id
+            )),
+            expires_at: None,
+        };
+
+        let unban_case = state.database().create_case(&unban_case).await?;
+        let channel_id = match state.audit_log_channel(guild_id).await {
+            Ok(channel_id) => channel_id,
+            Err(error) => {
+                tracing::warn!(
+                    guild_id = guild_id.get(),
+                    case_id = case.id,
+                    %error,
+                    "missing audit log channel while recording automatic unban"
+                );
+                continue;
+            }
+        };
+
+        match logging::send_case_log(ctx, channel_id, &unban_case).await {
+            Ok(message) => {
+                state
+                    .database()
+                    .update_case_audit_message(
+                        unban_case.id,
+                        channel_id.get() as i64,
+                        message.id.get() as i64,
+                    )
+                    .await?;
+            }
+            Err(error) => {
+                tracing::warn!(
+                    guild_id = guild_id.get(),
+                    case_id = unban_case.id,
+                    %error,
+                    "failed to send automatic unban audit log"
+                );
+            }
+        }
+    }
+
+    Ok(())
 }

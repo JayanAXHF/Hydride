@@ -95,6 +95,9 @@ pub async fn run(state: AppState) -> anyhow::Result<()> {
                 // run_startup_activity_reports(ctx, state.config()).await;
 
                 register_application_commands(ctx, framework, state.config()).await?;
+                crate::commands::moderation::reconcile_expired_tempbans(ctx, &state, ready.user.id)
+                    .await
+                    .context("failed to reconcile expired tempbans")?;
                 Ok(state)
             })
         })

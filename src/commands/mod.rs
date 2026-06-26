@@ -43,6 +43,7 @@ pub fn all() -> Vec<poise::Command<AppState, Error>> {
         moderation::timeout(),
         moderation::kick(),
         moderation::ban(),
+        moderation::tempban(),
         moderation::unban(),
         moderation::purge(),
         moderation::nick(),
