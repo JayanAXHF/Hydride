@@ -12,7 +12,7 @@ use serenity::all::{
 use std::fmt::Write;
 use time::{UtcDateTime, format_description::well_known::Rfc2822};
 
-const SOURCE: &str = "https://github.com/jayanaxhf/hydride";
+const SOURCE: &str = "https://github.com/plushys-playground-discord/Hydride";
 
 #[poise::command(prefix_command, slash_command, category = "Meta")]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
