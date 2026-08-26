@@ -64,6 +64,10 @@ pub struct ModerationConfig {
     pub revive_role_id: Option<u64>,
     #[serde(default)]
     pub error_log_channel: Option<u64>,
+    #[serde(default)]
+    pub faq_password: Option<String>,
+    #[serde(default)]
+    pub verified_role: Option<u64>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize)]
@@ -146,6 +150,8 @@ impl Default for ModerationConfig {
             ephemeral_slash_responses: default_ephemeral_slash_responses(),
             max_case_results: default_max_case_results(),
             revive_role_id: None,
+            faq_password: None,
+            verified_role: None,
         }
     }
 }

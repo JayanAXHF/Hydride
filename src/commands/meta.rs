@@ -2,7 +2,7 @@ use crate::{
     app::START_TIMESTAMP,
     commands::{Context, Error},
 };
-use anyhow::bail;
+use anyhow::{Context as AnyhowContext, bail};
 use futures::{self, StreamExt, stream};
 use poise::CreateReply;
 use serenity::all::{
@@ -154,6 +154,42 @@ pub async fn revive(ctx: Context<'_>, #[rest] question: String) -> Result<(), Er
     ctx.send(reply).await?;
     Ok(())
 }
+
+#[poise::command(slash_command, ephemeral)]
+pub async fn verify(ctx: Context<'_>, #[rest] password: String) -> Result<(), Error> {
+    let Some(ref pwd) = ctx.data().config().moderation.faq_password else {
+        ctx.say("No password was configured. Contact the moderation team via a support ticket.")
+            .await?;
+        return Ok(());
+    };
+    let user_password = password.trim();
+    if &user_password == pwd {
+        let Some(verified_role) = ctx
+            .data()
+            .config()
+            .moderation
+            .verified_role
+            .map(|f| RoleId::new(f))
+        else {
+            ctx.say(
+                "No verified role configured. This is probably a bug. Contact the moderation team.",
+            )
+            .await?;
+            return Ok(());
+        };
+        let member = ctx
+            .author_member()
+            .await
+            .context("Error fetching member from ctx")?;
+        member.add_role(&ctx, verified_role).await?;
+        ctx.say("Verfified! Enjoy!").await?;
+    } else {
+        ctx.say("Incorrect password!").await?;
+    }
+
+    Ok(())
+}
+
 pub fn fmt_user(
     User { id, name, .. }: &User,
     f: &mut impl std::fmt::Write,
